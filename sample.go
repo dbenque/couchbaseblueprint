@@ -18,7 +18,7 @@ func Def1() ClusterGroupDef {
 func Def1XDCR_Hyatt() XDCRDef {
 	return XDCRDef{
 		Rule:          "ring",
-		Bidirectional: true,
+		Bidirectional: false,
 		Source:        Selector{"Company": "Hyatt"},
 		SourceExclude: Selector{"ReadOnly": "true"},
 		GroupOn:       []string{},
@@ -29,9 +29,11 @@ func Def1XDCR_Hyatt() XDCRDef {
 
 func Def1XDCR_HyattR() XDCRDef {
 	return XDCRDef{
-		Rule:          "ring",
+		Rule:          "custom",
 		Bidirectional: true,
 		Source:        Selector{"Company": "Hyatt"},
+		SourceExclude: Selector{"ReadOnly": "true"},
+		Destination:   Selector{"Company": "Hyatt", "ReadOnly": "true"},
 		GroupOn:       []string{"Cluster", "ClusterGroup", "Datacenter"},
 		Args:          []string{},
 		Color:         "blue",

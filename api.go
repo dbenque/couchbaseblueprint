@@ -73,9 +73,10 @@ type Bucket struct {
 type XDCRRule string
 
 const (
-	TreeRule  XDCRRule = "tree"
-	RingRule  XDCRRule = "ring"
-	ChainRule XDCRRule = "chain"
+	TreeRule   XDCRRule = "tree"
+	RingRule   XDCRRule = "ring"
+	ChainRule  XDCRRule = "chain"
+	CustomRule XDCRRule = "custom"
 )
 
 type XDCRDef struct {

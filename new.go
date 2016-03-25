@@ -99,8 +99,34 @@ func NewXDCR(def XDCRDef, dcs []Datacenter) []XDCR {
 			}
 			return result
 		}
+	case CustomRule:
+		{
+			result := []XDCR{}
+			for _, fb := range filteredBuckets {
+				sources := fb[0]
+				destinations := fb[1]
+				sort.Sort(sources)
+				sort.Sort(destinations)
+				result = append(result, buildCustom(sources, destinations, def)...)
+			}
+			return result
+		}
 	}
 	return []XDCR{}
+}
+
+func buildCustom(sources, destinations BucketByPath, def XDCRDef) []XDCR {
+	result := []XDCR{}
+	if len(sources) < 1 || len(destinations) < 1 {
+		return result
+	}
+
+	for _, s := range sources {
+		for _, d := range destinations {
+			result = append(result, XDCR{Source: s, Destination: d, Color: def.Color})
+		}
+	}
+	return result
 }
 
 func buildRing(buckets BucketByPath, def XDCRDef) []XDCR {
