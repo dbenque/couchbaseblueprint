@@ -15,7 +15,7 @@ func gen_sample1() {
 	DC2 := NewDatacenter("DC2")
 	def1 := Def1()
 
-	ToFile(def1, "sample1/couchbase.json")
+	ToFile(ClusterGroupDefBluePrint{[]ClusterGroupDef{def1}}, "sample1/couchbase")
 
 	DC1.AddClusterGroupDef(def1)
 	DC2.AddClusterGroupDef(def1)
@@ -29,7 +29,7 @@ func gen_sample1() {
 	xdcrdefs = append(xdcrdefs, Def1XDCR_HyattR())
 	xdcrdefs = append(xdcrdefs, Def1XDCR_Campanile())
 
-	ToFile(xdcrdefs, "sample1/XDCR.json")
+	ToFile(XDCRDefBluePrint{xdcrdefs}, "sample1/XDCR")
 
 	for _, xdcr := range xdcrdefs {
 		for _, x := range NewXDCR(xdcr, []Datacenter{DC1, DC2}) {

@@ -1,0 +1,22 @@
+xdcrdefs:
+- rule: custom
+  bidirectional: false
+  source:
+    Type: MCast
+  destination:
+    Type: BCast
+  groupOn:
+  - Role
+  args: []
+  color: red
+- rule: custom
+  bidirectional: false
+  source:
+    Type: BCast
+  destination:
+    Type: Child
+  groupOn:
+  - Role
+  - ClusterGroup
+  args: []
+  color: blue

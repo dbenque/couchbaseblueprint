@@ -36,7 +36,7 @@ func gen_RBox1() {
 	defs = append(defs, defB_AF)
 	defs = append(defs, defM)
 
-	ToFile(defs, "RBox1/couchbase.json")
+	ToFile(ClusterGroupDefBluePrint{defs}, "RBox1/couchbase")
 
 	ADP.AddClusterGroupDef(defM)
 
@@ -63,7 +63,7 @@ func gen_RBox1() {
 	xdcrdefs = append(xdcrdefs, DefXDCR_M())
 	xdcrdefs = append(xdcrdefs, DefXDCR_B())
 
-	ToFile(xdcrdefs, "RBox1/XDCR.json")
+	ToFile(XDCRDefBluePrint{xdcrdefs}, "RBox1/XDCR")
 
 	for _, xdcr := range xdcrdefs {
 		for _, x := range NewXDCR(xdcr, DCs) {

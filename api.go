@@ -35,11 +35,15 @@ func (dc *Datacenter) GetBuckets() []Bucket {
 	return result
 }
 
+type ClusterGroupDefBluePrint struct {
+	ClusterGroups []ClusterGroupDef
+}
+
 type ClusterGroupDef struct {
-	Name        string
-	PeakTokens  []string
-	Labels      Labels
-	ClusterDefs []ClusterDef
+	Name        string       `yaml:"name" json:"name"`
+	PeakTokens  []string     `yaml:"peakToken" json:"peakToken"`
+	Labels      Labels       `yaml:"labels,omitempty" json:"labels,omitempty"`
+	ClusterDefs []ClusterDef `yaml:"clusters" json:"clusters"`
 }
 
 type ClusterGroup struct {
@@ -50,10 +54,10 @@ type ClusterGroup struct {
 }
 
 type ClusterDef struct {
-	Name      string
-	Instances []string
-	Labels    Labels
-	Buckets   []Bucket
+	Name      string   `yaml:"name" json:"name"`
+	Instances []string `yaml:"instances" json:"instances"`
+	Labels    Labels   `yaml:"labels,omitempty" json:"labels,omitempty"`
+	Buckets   []Bucket `yaml:"buckets" json:"buckets"`
 }
 
 type Cluster struct {
@@ -64,10 +68,10 @@ type Cluster struct {
 }
 
 type Bucket struct {
-	Name              string
-	RamQuota          int
-	CBReplicateNumber int
-	Labels            Labels
+	Name              string `yaml:"name" json:"name"`
+	RamQuota          int    `yaml:"ramQuota" json:"ramQuota"`
+	CBReplicateNumber int    `yaml:"cbReplicatNumber" json:"cbReplicatNumber"`
+	Labels            Labels `yaml:"labels,omitempty" json:"labels,omitempty"`
 }
 
 type XDCRRule string
@@ -79,16 +83,20 @@ const (
 	CustomRule XDCRRule = "custom"
 )
 
+type XDCRDefBluePrint struct {
+	XDCRDefs []XDCRDef
+}
+
 type XDCRDef struct {
-	Rule               XDCRRule
-	Bidirectional      bool
-	Source             Selector
-	SourceExclude      Selector
-	Destination        Selector
-	DestinationExclude Selector
-	GroupOn            []string
-	Args               []string
-	Color              string
+	Rule               XDCRRule `yaml:"rule" json:"rule"`
+	Bidirectional      bool     `yaml:"bidirectional" json:"bidirectional"`
+	Source             Selector `yaml:"source" json:"source"`
+	SourceExclude      Selector `yaml:"sourceExclude,omitempty" json:"sourceExclude,omitempty"`
+	Destination        Selector `yaml:"destination,omitempty" json:"destination,omitempty"`
+	DestinationExclude Selector `yaml:"destinationExclude,omitempty" json:"destinationExclude,omitempty"`
+	GroupOn            []string `yaml:"groupOn,omitempty" json:"groupOn,omitempty"`
+	Args               []string `yaml:"args" json:"args"`
+	Color              string   `yaml:"color" json:"color"`
 }
 
 type XDCR struct {
