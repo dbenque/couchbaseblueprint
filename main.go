@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 
 	"gopkg.in/yaml.v2"
 )
@@ -18,11 +19,19 @@ func main() {
 		return
 	}
 
-	if len(os.Args) != 3 || (os.Args[1] != "yaml" && os.Args[1] != "json") {
-		fmt.Println("First parameter must be input format [yaml|json] and the second parameter must be the folder containing the files (couchbase.yaml and XDCR.yaml)")
+	if (len(os.Args) != 3 && len(os.Args) != 4) || (os.Args[1] != "yaml" && os.Args[1] != "json") {
+		fmt.Println("First parameter must be input format [yaml|json] and the second parameter must be the folder containing the files (couchbase.yaml and XDCR.yaml). Optional last param, Datacenter count")
 	}
 
-	FromFile(os.Args[2], os.Args[1])
+	dcCount := 1
+	if len(os.Args) == 4 {
+		var err error
+		dcCount, err = strconv.Atoi(os.Args[3])
+		if err != nil {
+			fmt.Println("Error with datacenter counter. Last parameter should be a number ")
+		}
+	}
+	FromFile(os.Args[2], os.Args[1], dcCount)
 	//FromFile(os.Args[2], "json")
 	//FromFile(os.Args[2], "yaml")
 
@@ -44,7 +53,12 @@ func ToFile(v interface{}, filePath string) {
 	}
 }
 
-func FromFile(folder, format string) {
+func FromFile(folder, format string, dcCount int) {
+
+	DCs := []Datacenter{}
+	for i := 0; i < dcCount; i++ {
+		DCs = append(DCs, NewDatacenter(fmt.Sprintf("DC%d", i+1)))
+	}
 
 	switch format {
 	case "json":
@@ -71,18 +85,21 @@ func FromFile(folder, format string) {
 			return
 		}
 
-		DC := NewDatacenter("DC")
 		for _, d := range cgdefBlueprint.ClusterGroups {
-			DC.AddClusterGroupDef(d)
+			for i := range DCs {
+				DCs[i].AddClusterGroupDef(d)
+			}
 		}
 
 		var buf bytes.Buffer
-		DC.Dot(&buf)
+		for i := range DCs {
+			DCs[i].Dot(&buf)
+		}
 
 		//fmt.Printf("%#v\n", xdcrdefBlueprint)
 
 		for _, xdcr := range xdcrdefBlueprint.XDCRDefs {
-			for _, x := range NewXDCR(xdcr, []Datacenter{DC}) {
+			for _, x := range NewXDCR(xdcr, DCs) {
 				x.Dot(&buf)
 			}
 		}
@@ -112,18 +129,21 @@ func FromFile(folder, format string) {
 			return
 		}
 
-		DC := NewDatacenter("DC")
 		for _, d := range cgdefBlueprint.ClusterGroups {
-			DC.AddClusterGroupDef(d)
+			for i := range DCs {
+				DCs[i].AddClusterGroupDef(d)
+			}
 		}
 
 		var buf bytes.Buffer
-		DC.Dot(&buf)
+		for i := range DCs {
+			DCs[i].Dot(&buf)
+		}
 
 		//fmt.Printf("%#v\n", xdcrdefBlueprint)
 
 		for _, xdcr := range xdcrdefBlueprint.XDCRDefs {
-			for _, x := range NewXDCR(xdcr, []Datacenter{DC}) {
+			for _, x := range NewXDCR(xdcr, DCs) {
 				x.Dot(&buf)
 			}
 		}
