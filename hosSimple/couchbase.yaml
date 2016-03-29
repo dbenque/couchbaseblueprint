@@ -1,0 +1,15 @@
+clustergroups:
+- name: CG
+  peakToken:
+  - "hyatt"
+  clusters:
+  - name: Booking
+    instances:
+    - A
+    - B
+    buckets:
+    - name: Resa
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Role: Resa

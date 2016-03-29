@@ -5,6 +5,8 @@ import (
 	"io"
 )
 
+var DotLevels = map[string]Bucket{}
+
 func (c *Cluster) Dot(w io.Writer) {
 
 	fmt.Fprintf(w, "subgraph cluster_%s {\n", c.Path())
@@ -12,8 +14,14 @@ func (c *Cluster) Dot(w io.Writer) {
 
 	for _, b := range c.Buckets {
 		fmt.Fprintf(w, "%s[label=%s];\n", b.Path(), b.Name)
+		if l, ok := b.Labels["Level"]; ok {
+			if other, found := DotLevels[l]; found {
+				fmt.Fprintf(w, "{rank=same; %s %s}\n", b.Path(), other.Path())
+			} else {
+				DotLevels[l] = b
+			}
+		}
 	}
-
 	fmt.Fprintf(w, "}\n")
 }
 
