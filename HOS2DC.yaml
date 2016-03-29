@@ -1,0 +1,4 @@
+topos:
+  hosSimple/couchbase.yaml: ["DC1","DC2"]
+xdcrs:
+  hosSimple/XDCR.yaml: ["DC1","DC2"]

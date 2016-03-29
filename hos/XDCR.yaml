@@ -1,0 +1,29 @@
+xdcrdefs:
+- rule: ring
+  bidirectional: true
+  source:
+    Role: Resa
+  groupOn:
+    - ClusterGroup
+  args: []
+  color: red
+- rule: ring
+  bidirectional: true
+  source:
+    Role: Shop
+  groupOn:
+    - ClusterGroup
+  args: []
+  color: blue
+- rule: custom
+  bidirectional: false
+  source:
+    Role: Resa
+  destination:
+    Role: ResaRead
+  groupOn:
+    - Cluster
+    - ClusterGroup
+    - Datacenter
+  args: []
+  color: green
