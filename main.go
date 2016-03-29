@@ -11,12 +11,60 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type DCInjector struct {
+	Topos map[string][]string
+	XDCRs map[string][]string
+}
+
 func main() {
 
 	if len(os.Args) == 1 {
 		gen_sample1()
 		gen_RBox1()
 		return
+	}
+
+	if len(os.Args) == 2 {
+		b, err := ioutil.ReadFile(os.Args[1])
+		//		format := strings.Split(os.Args[1], ".")[1]
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		var dcinjector DCInjector
+		err = yaml.Unmarshal(b, &dcinjector)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		datacenters := map[string]Datacenter{}
+		for _, dcs := range dcinjector.Topos {
+			for _, d := range dcs {
+				if _, ok := datacenters[d]; ok {
+					continue
+				}
+				datacenters[d] = NewDatacenter(d)
+			}
+		}
+
+		// for f, dcs := range dcinjector.Topos {
+		// 	for _, d := range dcs {
+		// 		aDc := datacenters[d]
+		// 		FromFile(f, format, []Datacenter{aDc})
+		// 		datacenters[d] = aDc
+		// 	}
+		// }
+		//
+		// for f, dcs := range dcinjector.XDCRs {
+		// 	DCS := []Datacenter{}
+		// 	for _, d := range dcs {
+		// 		DCS = append(DCS, datacenters[d])
+		// 		FromFile(f, format, []Datacenter{aDc})
+		// 		datacenters[d] = aDc
+		// 	}
+		// }
+
 	}
 
 	if (len(os.Args) != 3 && len(os.Args) != 4) || (os.Args[1] != "yaml" && os.Args[1] != "json") {
@@ -31,7 +79,13 @@ func main() {
 			fmt.Println("Error with datacenter counter. Last parameter should be a number ")
 		}
 	}
-	FromFile(os.Args[2], os.Args[1], dcCount)
+
+	DCs := []Datacenter{}
+	for i := 0; i < dcCount; i++ {
+		DCs = append(DCs, NewDatacenter(fmt.Sprintf("DC%d", i+1)))
+	}
+
+	FromFile(os.Args[2], os.Args[1], DCs)
 	//FromFile(os.Args[2], "json")
 	//FromFile(os.Args[2], "yaml")
 
@@ -53,12 +107,7 @@ func ToFile(v interface{}, filePath string) {
 	}
 }
 
-func FromFile(folder, format string, dcCount int) {
-
-	DCs := []Datacenter{}
-	for i := 0; i < dcCount; i++ {
-		DCs = append(DCs, NewDatacenter(fmt.Sprintf("DC%d", i+1)))
-	}
+func FromFile(folder, format string, DCs []Datacenter) {
 
 	switch format {
 	case "json":
@@ -95,8 +144,6 @@ func FromFile(folder, format string, dcCount int) {
 		for i := range DCs {
 			DCs[i].Dot(&buf)
 		}
-
-		//fmt.Printf("%#v\n", xdcrdefBlueprint)
 
 		for _, xdcr := range xdcrdefBlueprint.XDCRDefs {
 			for _, x := range NewXDCR(xdcr, DCs) {

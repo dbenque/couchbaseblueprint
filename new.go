@@ -92,6 +92,7 @@ func NewXDCR(def XDCRDef, dcs []Datacenter) []XDCR {
 	case RingRule:
 		{
 			result := []XDCR{}
+			// loop over each group
 			for _, fb := range filteredBuckets {
 				sources := fb[0]
 				sort.Sort(sources)
@@ -102,6 +103,7 @@ func NewXDCR(def XDCRDef, dcs []Datacenter) []XDCR {
 	case CustomRule:
 		{
 			result := []XDCR{}
+			// loop over each group
 			for _, fb := range filteredBuckets {
 				sources := fb[0]
 				destinations := fb[1]
@@ -111,8 +113,62 @@ func NewXDCR(def XDCRDef, dcs []Datacenter) []XDCR {
 			}
 			return result
 		}
+	case UptreeRule, TreeRule:
+		{
+			result := []XDCR{}
+			for _, fb := range filteredBuckets {
+				sources := fb[0]
+				result = append(result, buildTree(sources, def, def.Rule == UptreeRule)...)
+			}
+			return result
+		}
 	}
 	return []XDCR{}
+}
+
+func buildTree(buckets BucketByPath, def XDCRDef, up bool) []XDCR {
+	result := []XDCR{}
+
+	byLevel := map[string]BucketByPath{}
+
+	// create indexing by level
+	for _, b := range buckets {
+		level := b.Labels["Level"]
+		bucketsOfLevel, ok := byLevel[level]
+		if !ok {
+			bucketsOfLevel = BucketByPath{}
+		}
+		bucketsOfLevel = append(bucketsOfLevel, b)
+		byLevel[level] = bucketsOfLevel
+	}
+
+	// retrieve all level
+	levels := []string{}
+	for l := range byLevel {
+		levels = append(levels, l)
+	}
+	sort.Strings(levels)
+
+	// build tree
+	for i := 0; i < len(levels)-1; i++ {
+		sources := byLevel[levels[i]]
+		destinations := byLevel[levels[i+1]]
+
+		for j, d := range destinations {
+			s := sources[j%len(sources)]
+
+			if up {
+				s, d = d, s
+			}
+
+			result = append(result, XDCR{Source: s, Destination: d, Color: def.Color})
+			if def.Bidirectional {
+				result = append(result, XDCR{Source: d, Destination: s, Color: def.Color})
+			}
+		}
+	}
+
+	return result
 }
 
 func buildCustom(sources, destinations BucketByPath, def XDCRDef) []XDCR {
@@ -124,6 +180,9 @@ func buildCustom(sources, destinations BucketByPath, def XDCRDef) []XDCR {
 	for _, s := range sources {
 		for _, d := range destinations {
 			result = append(result, XDCR{Source: s, Destination: d, Color: def.Color})
+			if def.Bidirectional {
+				result = append(result, XDCR{Source: d, Destination: s, Color: def.Color})
+			}
 		}
 	}
 	return result

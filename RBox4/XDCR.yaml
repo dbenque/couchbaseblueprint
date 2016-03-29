@@ -1,0 +1,19 @@
+xdcrdefs:
+- rule: custom
+  bidirectional: false
+  source:
+    Type: MCast
+    Role: Rbox
+  destination:
+    Type: BCast
+    Role: Rbox
+  args: []
+  color: red
+- rule: tree
+  bidirectional: false
+  source:
+    Role: Rbox
+  groupOn:
+  - ClusterGroup
+  args: []
+  color: orange

@@ -1,0 +1,19 @@
+xdcrdefs:
+- rule: custom
+  bidirectional: false
+  source:
+    Type: BCast
+    Role: Stat
+  destination:
+    Type: MCast
+    Role: Stat
+  args: []
+  color: blue
+- rule: uptree
+  bidirectional: false
+  source:
+    Role: Stat
+  groupOn:
+  - ClusterGroup
+  args: []
+  color: green

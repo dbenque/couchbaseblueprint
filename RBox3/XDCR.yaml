@@ -1,0 +1,43 @@
+xdcrdefs:
+- rule: custom
+  bidirectional: false
+  source:
+    Type: MCast
+    Role: Rbox
+  destination:
+    Type: BCast
+    Role: Rbox
+  groupOn:
+  - Datacenter
+  args: []
+  color: red
+- rule: custom
+  bidirectional: false
+  source:
+    Type: BCast
+    Role: Stat
+  destination:
+    Type: MCast
+    Role: Stat
+  groupOn:
+  - Datacenter
+  args: []
+  color: blue
+- rule: tree
+  bidirectional: false
+  source:
+    Role: Rbox
+  groupOn:
+  - Datacenter
+  - ClusterGroup
+  args: []
+  color: orange
+- rule: uptree
+  bidirectional: false
+  source:
+    Role: Stat
+  groupOn:
+  - Datacenter
+  - ClusterGroup
+  args: []
+  color: green
