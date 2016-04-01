@@ -1,0 +1,45 @@
+xdcrdefs:
+#
+# Rules for stat in green
+#
+- rule: uptree
+  bidirectional: false
+  source:
+    Role: Stat
+  groupOn:
+    - ClusterGroup
+    - Datacenter
+  args: []
+  color: green
+- rule: uptree
+  bidirectional: false
+  source:
+    Role: Stat
+    Type: Proxy|BCast
+  groupOn:
+    - Datacenter
+  args: []
+  color: forestgreen
+- rule: custom
+  bidirectional: false
+  source:
+    Type: Proxy
+    Role: Stat
+  destination:
+    Type: MCast
+    Role: Stat
+  args: []
+  color: darkgreen
+#
+# Rules for RBox in Red
+#
+- rule: custom
+  bidirectional: false
+  source:
+    Type: MCast
+    Role: Rbox
+  destination:
+    Type: Proxy
+    Role: Rbox
+  args: []
+  color: red

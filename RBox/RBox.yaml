@@ -1,0 +1,52 @@
+clustergroups:
+- name: AIRLINE
+  peakToken:
+  - "TOKEN"
+  clusters:
+  - name: BBOX
+    instances: [ BCAST ]
+    buckets:
+    - name: Rbox
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Type: BCast
+        Role: Rbox
+        Level: "2"
+    - name: Stat
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Type: BCast
+        Role: Stat
+        Level: "2"
+  - name: BOXL3
+    instances: [ INSTANCE_L3 ]
+    buckets:
+    - name: Rbox
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Role: Rbox
+        Level: "3"
+    - name: Stat
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Role: Stat
+        Level: "3"
+  - name: BOXL4
+    instances: [ INSTANCE_L4 ]
+    buckets:
+    - name: Rbox
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Role: Rbox
+        Level: "4"
+    - name: Stat
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Role: Stat
+        Level: "4"

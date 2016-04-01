@@ -1,0 +1,4 @@
+replacements:
+    CLUSTERGROUP: "Airfrance_AF"
+    REGEXP: "AF_"
+    COLOR: blue

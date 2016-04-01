@@ -110,9 +110,17 @@ func (b *Bucket) Match(s Selector) bool {
 	if s == nil {
 		return false
 	}
+
 	for k, v := range s {
 		vv, ok := b.Labels[k]
-		if !ok || vv != v {
+		if !ok {
+			return false
+		}
+		found := false
+		for _, vvor := range strings.Split(v, "|") {
+			found = (found || (vvor == vv))
+		}
+		if !found {
 			return false
 		}
 	}

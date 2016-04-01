@@ -13,6 +13,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type EnvData struct {
+	Replacements Labels `yaml:"replacements" json:"replacements"`
+}
+
 type DCInjector struct {
 	Topos map[string][]string
 	XDCRs map[string][]string
@@ -70,13 +74,77 @@ func ToFile(v interface{}, filePath string) {
 	}
 }
 
-func TopoFromFile(file string, DCs []Datacenter, w io.Writer) (error, []Datacenter) {
+func ProcessEnv(file, envfile string) (error, string) {
+
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		fmt.Println(err)
+		return err, ""
+	}
+
+	format := strings.Split(envfile, ".")[1]
+	benv, err := ioutil.ReadFile(envfile)
+	if err != nil {
+		fmt.Println(err)
+		return err, ""
+	}
+
+	var envData EnvData
+	switch format {
+	case "json":
+		err = json.Unmarshal(benv, &envData)
+	case "yaml":
+		err = yaml.Unmarshal(benv, &envData)
+	}
+	if err != nil {
+		fmt.Println(err)
+		return err, ""
+	}
+
+	str := string(b)
+
+	for k, v := range envData.Replacements {
+		str = strings.Replace(str, k, v, -1)
+	}
+
+	tfile, err := ioutil.TempFile("./", "tmp_")
+	defer tfile.Close()
+	if err != nil {
+		fmt.Println(err)
+		return err, ""
+	}
+
+	_, err = tfile.WriteString(str)
+	if err != nil {
+		fmt.Println(err)
+		return err, ""
+	}
+
+	return nil, tfile.Name()
+
+}
+
+func TopoFromFile(files string, DCs []Datacenter, w io.Writer) (error, []Datacenter) {
+
+	splitted := strings.Split(files, "+")
+	file := splitted[0]
 	format := strings.Split(file, ".")[1]
+	if len(splitted) == 2 {
+		envFile := splitted[1]
+		var err error
+		err, file = ProcessEnv(file, envFile)
+		if err != nil {
+			fmt.Println(err)
+			return err, nil
+		}
+	}
+
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		fmt.Println(err)
 		return err, nil
 	}
+
 	var cgdefBlueprint ClusterGroupDefBluePrint
 	switch format {
 	case "json":
@@ -102,14 +170,27 @@ func TopoFromFile(file string, DCs []Datacenter, w io.Writer) (error, []Datacent
 	return nil, DCs
 }
 
-func XDCRFromFile(file string, DCs []Datacenter, w io.Writer) {
+func XDCRFromFile(files string, DCs []Datacenter, w io.Writer) error {
 
+	splitted := strings.Split(files, "+")
+	file := splitted[0]
 	format := strings.Split(file, ".")[1]
+	if len(splitted) == 2 {
+		envFile := splitted[1]
+		var err error
+		err, file = ProcessEnv(file, envFile)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
+
 	var xdcrdefBlueprint XDCRDefBluePrint
 	switch format {
 	case "json":
@@ -119,7 +200,7 @@ func XDCRFromFile(file string, DCs []Datacenter, w io.Writer) {
 	}
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
 
 	for _, xdcr := range xdcrdefBlueprint.XDCRDefs {
@@ -127,6 +208,8 @@ func XDCRFromFile(file string, DCs []Datacenter, w io.Writer) {
 			x.Dot(w)
 		}
 	}
+
+	return nil
 }
 
 func FromFolder(folder, format string, DCs []Datacenter) {

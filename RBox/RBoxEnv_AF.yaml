@@ -1,0 +1,6 @@
+replacements:
+    AIRLINE: "Airfrance"
+    TOKEN: "AF"
+    BCAST: "B1"
+    INSTANCE_L3: "\"I1\",\"I2\",\"I3\""
+    INSTANCE_L4: ""

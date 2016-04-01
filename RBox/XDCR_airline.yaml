@@ -1,0 +1,21 @@
+xdcrdefs:
+- rule: tree
+  bidirectional: false
+  source:
+    ClusterGroup: CLUSTERGROUP|DCProxy_
+    Role: Rbox
+    Type: BCast|Proxy
+  groupOn:
+  - Datacenter
+  args: [ "REGEXP" ]
+  color: COLOR
+- rule: tree
+  bidirectional: false
+  source:
+    ClusterGroup: CLUSTERGROUP
+    Role: Rbox
+  groupOn:
+  - ClusterGroup
+  - Datacenter
+  args: []
+  color: COLOR

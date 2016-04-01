@@ -1,0 +1,22 @@
+clustergroups:
+- name: ADP
+  peakToken:
+  - ""
+  clusters:
+  - name: MasterBox
+    instances:
+    - ""
+    buckets:
+    - name: Rbox
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Type: MCast
+        Role: Rbox
+    - name: Stat
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Type: MCast
+        Role: Stat
+        Level: "0"

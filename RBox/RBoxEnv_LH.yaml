@@ -1,0 +1,6 @@
+replacements:
+    AIRLINE: "Lufthansa"
+    TOKEN: "LH"
+    BCAST: "\"B1\",\"B2\""
+    INSTANCE_L3: "\"I1\",\"I2\",\"I3\",\"I4\""
+    INSTANCE_L4: "\"I10\",\"I20\",\"I30\",\"I40\",\"I50\",\"I60\",\"I70\",\"I80\",\"I90\""

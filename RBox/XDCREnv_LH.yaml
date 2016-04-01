@@ -1,0 +1,4 @@
+replacements:
+    CLUSTERGROUP: "Lufthansa_LH"
+    REGEXP: "LH_"
+    COLOR: orange

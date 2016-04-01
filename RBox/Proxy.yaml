@@ -1,0 +1,22 @@
+clustergroups:
+- name: DCProxy
+  peakToken:
+  - ""
+  clusters:
+  - name: MBOX_Proxy
+    instances: [ PROXYINSTANCE ]
+    buckets:
+    - name: Rbox
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Type: Proxy
+        Role: Rbox
+        Level: "1"
+    - name: Stat
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        Type: Proxy
+        Role: Stat
+        Level: "1"

@@ -1,0 +1,10 @@
+topos:
+  RBox/Erding.yaml: ["Erding"]
+  RBox/Proxy.yaml+RBox/ProxyEnv_GoogleEast.yaml: ["GoogleEast"]
+  RBox/Proxy.yaml+RBox/ProxyEnv_GoogleWest.yaml: ["GoogleWest"]
+  RBox/RBox.yaml+RBox/RBoxEnv_AF.yaml: ["GoogleEast","GoogleWest"]
+  RBox/RBox.yaml+RBox/RBoxEnv_LH.yaml: ["GoogleEast"]
+xdcrs:
+  RBox/XDCR.yaml: ["GoogleEast","GoogleWest","Erding"]
+  RBox/XDCR_airline.yaml+RBox/XDCREnv_AF.yaml: ["GoogleEast","GoogleWest"]
+  RBox/XDCR_airline.yaml+RBox/XDCREnv_LH.yaml: ["GoogleEast","GoogleWest"]
