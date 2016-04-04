@@ -13,19 +13,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type EnvData struct {
-	Replacements Labels `yaml:"replacements" json:"replacements"`
-}
-
-type DCInjector struct {
-	Topos map[string][]string
-	XDCRs map[string][]string
-}
-
 func main() {
 
 	if len(os.Args) == 1 {
-		gen_sample1()
+		gen_hos1()
 		gen_RBox1()
 		return
 	}

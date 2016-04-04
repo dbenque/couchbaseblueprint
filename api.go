@@ -2,27 +2,48 @@ package main
 
 import "strings"
 
+//Labels help to decorate entities
 type Labels map[string]string
+
+//Selector helps to filter in/out an entity based on its lables
 type Selector map[string]string
 
+//LabelMatcher interface to play with Selector. Most probably the entities imilementing this interface will compose Labels.
 type LabelMatcher interface {
 	Match(s Selector) bool
 }
 
+//EnvData simulate Environment file
+type EnvData struct {
+	Replacements Labels `yaml:"replacements" json:"replacements"`
+}
+
+//DCInjector is a struct to simulate operations to be done at Datacenter level
+type DCInjector struct {
+	//Topos key=topoFile[+envFile] value={list of datacenters on which the topology need to be deployed (one after the other)}
+	Topos map[string][]string
+	//XDCRs key=xdcrFile[+envFile] value={list of datacenters on which the rules need to be applied. Union of buckets of listed DC will be use to compute the XDCR instances}
+	XDCRs map[string][]string
+}
+
+//Datacenter named (unique) Datacenter instance.
 type Datacenter struct {
 	Name          string
 	ClusterGroups []ClusterGroup
 }
 
+//AddClusterGroup copy clustergroup instances in the Datacenter
 func (dc *Datacenter) AddClusterGroup(cg []ClusterGroup) {
 	dc.ClusterGroups = append(dc.ClusterGroups, cg...)
 }
 
+//AddClusterGroup create clustergroup instances in the Datacenter, based on the definition
 func (dc *Datacenter) AddClusterGroupDef(cgdef ClusterGroupDef) {
 	cg := NewClusterGroups(dc.Name, cgdef)
 	dc.ClusterGroups = append(dc.ClusterGroups, cg...)
 }
 
+//GetBuckets retrieve all buckets of the datacenter
 func (dc *Datacenter) GetBuckets() []Bucket {
 	result := []Bucket{}
 	for _, cg := range dc.ClusterGroups {
@@ -35,10 +56,12 @@ func (dc *Datacenter) GetBuckets() []Bucket {
 	return result
 }
 
+//ClusterGroupDefBluePrint blueprint listing one or several definitions of topology starting at ClusterGroup level.
 type ClusterGroupDefBluePrint struct {
 	ClusterGroups []ClusterGroupDef
 }
 
+//ClusterGroupDef definition of the topology at ClusterGroup level.
 type ClusterGroupDef struct {
 	Name        string       `yaml:"name" json:"name"`
 	PeakTokens  []string     `yaml:"peakToken" json:"peakToken"`
@@ -46,6 +69,7 @@ type ClusterGroupDef struct {
 	ClusterDefs []ClusterDef `yaml:"clusters" json:"clusters"`
 }
 
+//ClusterGroup ClusterGroup instance
 type ClusterGroup struct {
 	Name      string
 	PeakToken string
@@ -53,6 +77,7 @@ type ClusterGroup struct {
 	Clusters  []Cluster
 }
 
+//ClusterDef definition of the topology at Cluster level.
 type ClusterDef struct {
 	Name      string   `yaml:"name" json:"name"`
 	Instances []string `yaml:"instances" json:"instances"`
@@ -60,6 +85,7 @@ type ClusterDef struct {
 	Buckets   []Bucket `yaml:"buckets" json:"buckets"`
 }
 
+//Cluster Cluster instance
 type Cluster struct {
 	Name     string
 	Instance string
@@ -67,6 +93,7 @@ type Cluster struct {
 	Buckets  []Bucket
 }
 
+//Bucket instance
 type Bucket struct {
 	Name              string `yaml:"name" json:"name"`
 	RamQuota          int    `yaml:"ramQuota" json:"ramQuota"`
@@ -74,20 +101,22 @@ type Bucket struct {
 	Labels            Labels `yaml:"labels,omitempty" json:"labels,omitempty"`
 }
 
+//XDCRRule define type of rules for XDCR
 type XDCRRule string
 
 const (
 	UptreeRule XDCRRule = "uptree"
 	TreeRule   XDCRRule = "tree"
 	RingRule   XDCRRule = "ring"
-	ChainRule  XDCRRule = "chain"
 	CustomRule XDCRRule = "custom"
 )
 
+//XDCRDefBluePrint blueprint listing one or several XDCR Rule definitions.
 type XDCRDefBluePrint struct {
 	XDCRDefs []XDCRDef
 }
 
+//XDCRDef definition of an XDCR Rule
 type XDCRDef struct {
 	Rule               XDCRRule `yaml:"rule" json:"rule"`
 	Bidirectional      bool     `yaml:"bidirectional" json:"bidirectional"`
@@ -97,15 +126,20 @@ type XDCRDef struct {
 	DestinationExclude Selector `yaml:"destinationExclude,omitempty" json:"destinationExclude,omitempty"`
 	GroupOn            []string `yaml:"groupOn,omitempty" json:"groupOn,omitempty"`
 	Args               []string `yaml:"args" json:"args"`
+	ArgsXCluster       []string `yaml:"argsXCluster,omitempty" json:"argsXCluster,omitempty"`
+	ArgsXClusterGroup  []string `yaml:"argsXClusterGroup,omitempty" json:"argsXClusterGroup,omitempty"`
+	ArgsXDatacenter    []string `yaml:"argsXDatacenter,omitempty" json:"argsXDatacenter,omitempty"`
 	Color              string   `yaml:"color" json:"color"`
 }
 
+//XDCR Instance of an XDCR link
 type XDCR struct {
 	Source      Bucket
 	Destination Bucket
 	Color       string
 }
 
+//Match Checks if the Bucket matches the selector
 func (b *Bucket) Match(s Selector) bool {
 	if s == nil {
 		return false
@@ -127,6 +161,7 @@ func (b *Bucket) Match(s Selector) bool {
 	return true
 }
 
+//GroupHash compute the group key for that bucket based on a grounpOn key set.
 func (b *Bucket) GroupHash(groupOn []string) string {
 	f := "#"
 	if groupOn == nil {
@@ -140,6 +175,7 @@ func (b *Bucket) GroupHash(groupOn []string) string {
 	return f
 }
 
+//Copy create a new clone of the Lables
 func (l Labels) Copy() Labels {
 	result := Labels{}
 	for k, v := range l {
@@ -148,8 +184,14 @@ func (l Labels) Copy() Labels {
 	return result
 }
 
+//BucketByPath helps for sorting bucket by their path
 type BucketByPath []Bucket
 
-func (a BucketByPath) Len() int           { return len(a) }
-func (a BucketByPath) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+//Len to implement sort.Sort
+func (a BucketByPath) Len() int { return len(a) }
+
+//Swap to implement sort.Sort
+func (a BucketByPath) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+//Less to implement sort.Sort
 func (a BucketByPath) Less(i, j int) bool { return strings.Compare(a[i].Path(), a[j].Path()) < 0 }

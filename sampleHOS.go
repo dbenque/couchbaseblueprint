@@ -6,16 +6,16 @@ import (
 	"os"
 )
 
-func gen_sample1() {
+func gen_hos1() {
 
-	os.Remove("sample1")
-	os.Mkdir("sample1", 0777)
+	os.Remove("hos1")
+	os.Mkdir("hos1", 0777)
 
 	DC1 := NewDatacenter("DC1")
 	DC2 := NewDatacenter("DC2")
 	def1 := Def1()
 
-	ToFile(ClusterGroupDefBluePrint{[]ClusterGroupDef{def1}}, "sample1/couchbase")
+	ToFile(ClusterGroupDefBluePrint{[]ClusterGroupDef{def1}}, "hos1/couchbase")
 
 	DC1.AddClusterGroupDef(def1)
 	DC2.AddClusterGroupDef(def1)
@@ -29,7 +29,7 @@ func gen_sample1() {
 	xdcrdefs = append(xdcrdefs, Def1XDCR_HyattR())
 	xdcrdefs = append(xdcrdefs, Def1XDCR_Campanile())
 
-	ToFile(XDCRDefBluePrint{xdcrdefs}, "sample1/XDCR")
+	ToFile(XDCRDefBluePrint{xdcrdefs}, "hos1/XDCR")
 
 	for _, xdcr := range xdcrdefs {
 		for _, x := range NewXDCR(xdcr, []Datacenter{DC1, DC2}) {
