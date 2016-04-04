@@ -21,10 +21,12 @@ go run *.go
 ```
 
 It will generate 2 folders containing what blueprint could be:
-* hos1
-* RBox1
+
+- hos1
+- RBox1
 
 If you want to add another sample, create a new file mySample.go and modify the main.go to call your function in the section:
+
 ```
 if len(os.Args) == 1 {
   gen_hos1()
@@ -41,6 +43,7 @@ if len(os.Args) == 1 {
 To place user in a Dev-Ops situation, you will have to write blueprints and inject them on Datacenter(s). You can use both yaml or json format, but yaml is more convinient for human edition.
 
 Create a folder to host your blueprints. In that folder place all your blueprints: topology, xdcr and environment. Here is the RBox example:
+
 ```
 // Topology
 RBox/Erding.yaml    <-- Topology for Erding Datacenter
