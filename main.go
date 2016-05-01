@@ -7,13 +7,12 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/engine/standard"
-	"github.com/labstack/echo/middleware"
+	"github.com/gorilla/mux"
 
 	"gopkg.in/yaml.v2"
 )
@@ -34,18 +33,15 @@ func main() {
 	// From DC File
 	if len(os.Args) == 2 {
 		if os.Args[1] == "server" {
-			e := echo.New()
-			e.Use(middleware.Logger())
-			e.Use(middleware.Recover())
-			e.Use(middleware.Static("public"))
-			t := &Template{
-				templates: template.Must(template.ParseGlob("public/template/*.html")),
-			}
-			e.SetRenderer(t)
-			e.GET("/topo", dcTopoPageForm)
-			e.GET("/topo/:user/datacenter/:datacenterName", dcTopoPage)
-			e.POST("/uploadTopo/:user/datacenter/:dcname", dcUploadTopo)
-			e.Run(standard.New(":1323"))
+			templates = template.Must(template.ParseGlob("public/template/*.html"))
+			r := mux.NewRouter()
+			r.HandleFunc("/main", mainPage)
+			r.HandleFunc("/topo", dcTopoPageForm)
+			r.HandleFunc("/topo/{user}/datacenter/{datacenterName}", dcTopoPage)
+			r.HandleFunc("/uploadTopo/{user}/datacenter/{dcname}", dcUploadTopo)
+			r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
+			http.Handle("/", r)
+			http.ListenAndServe(":1323", nil)
 		} else {
 			FromDCFile(os.Args[1])
 		}

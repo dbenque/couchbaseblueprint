@@ -1,0 +1,11 @@
+{{define "topoDC"}}
+{{template "head"}}
+<h1>Definition</h1>
+<a href='/data/{{.User}}/dc/{{.DatacenterName}}/{{.DatacenterVersion}}/topodef.yaml'>topo.yaml</a><br>
+<h1>Instances</h1>
+<a href='/data/{{.User}}/dc/{{.DatacenterName}}/{{.DatacenterVersion}}/topo.yaml'>topo.yaml</a><br>
+<a href='/data/{{.User}}/dc/{{.DatacenterName}}/{{.DatacenterVersion}}/topo.json'>topo.json</a><br>
+<h1>Representation</h1>
+<img src="/data/{{.User}}/dc/{{.DatacenterName}}/{{.DatacenterVersion}}/topo.png" />
+{{template "foot"}}
+{{end}}
