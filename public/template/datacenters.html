@@ -1,0 +1,34 @@
+{{define "datacenters"}}
+{{template "head" .}}
+
+{{ if (len .Datacenters) }}
+
+<h1>Datacenters</h1>
+<table class="table table-condensed table-over">
+  <thead>
+    <th>Name</th>
+    <th>Actions<th>
+  </thead>
+  <tbody>
+      {{range .Datacenters}}
+        <tr>
+            <td>{{.Name}}</td>
+            <td><button onclick="location.href='/datacenter/{{.Name}}';" type="button" class="btn btn-primary">view</button></td>            
+        </tr>
+      {{end}}
+  </tbody>
+</table>
+
+{{ end }}
+<h1>New Datacenter</h1>
+
+<form action="/newdatacenter" method="GET">
+  <div class="form-group">
+    <label for="datacenterName">Datacenter Name</label>
+    <input type="text" class="form-control" name="datacenterName" id="datacenterName" placeholder="datacenter name">
+  </div>
+  <button type="submit" class="btn btn-primary">Create</button>
+</form>
+
+{{template "foot" .}}
+{{end}}

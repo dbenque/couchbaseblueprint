@@ -1,0 +1,21 @@
+{{define "users"}}
+{{template "head" .}}
+
+<h1>Users</h1>
+<table class="table table-condensed table-over">
+  <thead>
+    <th>Name</th>
+    <th>Actions<th>
+  </thead>
+  <tbody>
+      {{range ListUsers}}
+        <tr>
+            <td>{{.}}</td>
+            <td><button onclick="location.href='/deleteuser/{{.}}';" type="button" class="btn btn-danger">delete</button></td>            
+        </tr>
+      {{end}}
+  </tbody>
+</table>
+
+{{template "foot" .}}
+{{end}}

@@ -29,6 +29,9 @@ var fns = template.FuncMap{
 		}
 		return ""
 	},
+	"ListUsers": func() []string {
+		return listUsers()
+	},
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
@@ -39,13 +42,11 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
-
 	user := ""
 	//check cookie
 	if c, err := r.Cookie("user"); err == nil {
 		user = c.Value
 	}
-
 	//check uri
 	r.ParseForm()
 	userURL := r.Form.Get("user")
@@ -55,18 +56,16 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		cookie := http.Cookie{Name: "user", Value: user, Expires: expiration}
 		http.SetCookie(w, &cookie)
 	}
-
 	data := struct {
-		User           string
-		DatacenterName string
+		User string
 	}{
-		User:           user,
-		DatacenterName: "test",
+		User: user,
 	}
-
-	fmt.Printf("data:%#v\n", data)
-
 	renderTemplate(w, "mainPage", data)
+}
+
+func usersPage(w http.ResponseWriter, r *http.Request) {
+	renderTemplate(w, "users", nil)
 }
 
 func getuser(r *http.Request) string {
@@ -85,12 +84,7 @@ func datacentersPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	folderPath := filepath.Join("public", "data", user, "dc")
-	files, err := ioutil.ReadDir(folderPath)
-	if err != nil {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
-
+	files, _ := ioutil.ReadDir(folderPath)
 	type dc struct {
 		User string
 		Name string
@@ -103,9 +97,10 @@ func datacentersPage(w http.ResponseWriter, r *http.Request) {
 		User:        user,
 		Datacenters: []dc{},
 	}
-
-	for _, file := range files {
-		data.Datacenters = append(data.Datacenters, dc{Name: file.Name()})
+	if files != nil {
+		for _, file := range files {
+			data.Datacenters = append(data.Datacenters, dc{Name: file.Name()})
+		}
 	}
 	renderTemplate(w, "datacenters", data)
 }
@@ -137,14 +132,6 @@ func dcTopoPageForm(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("USer %s, datacenter %s\n", u, d)
 
 	http.Redirect(w, r, "/topo/"+u+"/datacenter/"+d, http.StatusMovedPermanently)
-}
-
-func datacenterURI(user, datacenterName string) string {
-	return filepath.Join("/data", user, "dc", datacenterName)
-}
-
-func datacenterDirectory(user, datacenterName string) string {
-	return filepath.Join("public", "data", user, "dc", datacenterName)
 }
 
 func dcTopoPage(w http.ResponseWriter, r *http.Request) {
@@ -239,6 +226,22 @@ func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+datacenterName, http.StatusMovedPermanently)
 }
 
+func datacenterURI(user, datacenterName string) string {
+	return filepath.Join("/data", user, "dc", datacenterName)
+}
+
+func datacenterDirectory(user, datacenterName string) string {
+	return filepath.Join("public", "data", user, "dc", datacenterName)
+}
+
+func listUsers() []string {
+	users := []string{}
+	files, _ := ioutil.ReadDir(filepath.Join("public", "data"))
+	for _, file := range files {
+		users = append(users, file.Name())
+	}
+	return users
+}
 func listVersions(folderPath string) ([]int, error) {
 	versions := []int{}
 	files, err := ioutil.ReadDir(folderPath)
