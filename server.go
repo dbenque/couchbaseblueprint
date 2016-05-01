@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -17,6 +18,18 @@ import (
 )
 
 var templates *template.Template
+
+var fns = template.FuncMap{
+	"ImgPath": func(user, datacenterName, version string) string {
+		if version != "" {
+			return filepath.Join(datacenterURI(user, datacenterName), "v"+version, "topo.png")
+		}
+		if lv, err := latestVersion(datacenterDirectory(user, datacenterName)); err == nil {
+			return filepath.Join(datacenterURI(user, datacenterName), lv, "topo.png")
+		}
+		return ""
+	},
+}
 
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	err := templates.ExecuteTemplate(w, tmpl, data)
@@ -26,16 +39,96 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
+
+	user := ""
+	//check cookie
+	if c, err := r.Cookie("user"); err == nil {
+		user = c.Value
+	}
+
+	//check uri
+	r.ParseForm()
+	userURL := r.Form.Get("user")
+	if userURL != "" {
+		user = userURL
+		expiration := time.Now().Add(24 * time.Hour)
+		cookie := http.Cookie{Name: "user", Value: user, Expires: expiration}
+		http.SetCookie(w, &cookie)
+	}
+
 	data := struct {
 		User           string
 		DatacenterName string
 	}{
-		User:           "David",
+		User:           user,
 		DatacenterName: "test",
 	}
 
+	fmt.Printf("data:%#v\n", data)
+
 	renderTemplate(w, "mainPage", data)
-	w.WriteHeader(http.StatusOK)
+}
+
+func getuser(r *http.Request) string {
+	user := ""
+	//check cookie
+	if c, err := r.Cookie("user"); err == nil {
+		user = c.Value
+	}
+	return user
+}
+
+func datacentersPage(w http.ResponseWriter, r *http.Request) {
+	user := getuser(r)
+	if user == "" {
+		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+		return
+	}
+	folderPath := filepath.Join("public", "data", user, "dc")
+	files, err := ioutil.ReadDir(folderPath)
+	if err != nil {
+		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+		return
+	}
+
+	type dc struct {
+		User string
+		Name string
+	}
+
+	data := struct {
+		User        string
+		Datacenters []dc
+	}{
+		User:        user,
+		Datacenters: []dc{},
+	}
+
+	for _, file := range files {
+		data.Datacenters = append(data.Datacenters, dc{Name: file.Name()})
+	}
+	renderTemplate(w, "datacenters", data)
+}
+
+func newDatacenterPage(w http.ResponseWriter, r *http.Request) {
+	user := getuser(r)
+	if user == "" {
+		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+		return
+	}
+	r.ParseForm()
+	d := r.Form.Get("datacenterName")
+	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusMovedPermanently)
+}
+
+func dcPage(w http.ResponseWriter, r *http.Request) {
+	user := getuser(r)
+	if user == "" {
+		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+		return
+	}
+	d := mux.Vars(r)["datacenterName"]
+	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusMovedPermanently)
 }
 
 func dcTopoPageForm(w http.ResponseWriter, r *http.Request) {
@@ -46,16 +139,37 @@ func dcTopoPageForm(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/topo/"+u+"/datacenter/"+d, http.StatusMovedPermanently)
 }
 
+func datacenterURI(user, datacenterName string) string {
+	return filepath.Join("/data", user, "dc", datacenterName)
+}
+
+func datacenterDirectory(user, datacenterName string) string {
+	return filepath.Join("public", "data", user, "dc", datacenterName)
+}
+
 func dcTopoPage(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	version := r.Form.Get("v")
+	user := mux.Vars(r)["user"]
+	datacenterName := mux.Vars(r)["datacenterName"]
+	versions, _ := listVersions(datacenterDirectory(user, datacenterName))
+
+	if version == "" && versions != nil && len(version) > 0 {
+		version = strconv.Itoa(versions[len(versions)-1])
+	}
+
 	data := struct {
 		User           string
 		DatacenterName string
+		Versions       []int
+		Version        string
 	}{
-		User:           mux.Vars(r)["user"],
-		DatacenterName: mux.Vars(r)["datacenterName"],
+		User:           user,
+		DatacenterName: datacenterName,
+		Versions:       versions,
+		Version:        version,
 	}
-	renderTemplate(w, "uploadTopoDC", data)
-	w.WriteHeader(http.StatusOK)
+	renderTemplate(w, "topoDC", data)
 }
 
 func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +178,7 @@ func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare Folder for next topo
 	var perm os.FileMode = 0777
-	dirDc := filepath.Join("public", "data", user, "dc", datacenterName)
+	dirDc := datacenterDirectory(user, datacenterName)
 	os.MkdirAll(dirDc, perm)
 	version, err := nextVersion(dirDc)
 	if err != nil {
@@ -122,30 +236,30 @@ func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	data := struct {
-		User              string
-		DatacenterName    string
-		DatacenterVersion string
-	}{
-		User:              user,
-		DatacenterName:    datacenterName,
-		DatacenterVersion: version,
-	}
-
-	renderTemplate(w, "topoDC", data)
-	w.WriteHeader(http.StatusOK)
-
+	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+datacenterName, http.StatusMovedPermanently)
 }
-func latestVersionInt(folderPath string) (int, error) {
+
+func listVersions(folderPath string) ([]int, error) {
+	versions := []int{}
 	files, err := ioutil.ReadDir(folderPath)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	max := 0
 	for _, file := range files {
 		if file.Name()[0] == 'v' && len(file.Name()) > 1 {
 			i, err := strconv.Atoi(file.Name()[1:])
+			if err == nil && i > max {
+				versions = append(versions, i)
+			}
+		}
+	}
+	return versions, nil
+}
+func latestVersionInt(folderPath string) (int, error) {
+	max := 0
+	if l, err := listVersions(folderPath); err == nil {
+		for _, i := range l {
 			if err == nil && i > max {
 				max = i
 			}

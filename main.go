@@ -33,10 +33,13 @@ func main() {
 	// From DC File
 	if len(os.Args) == 2 {
 		if os.Args[1] == "server" {
-			templates = template.Must(template.ParseGlob("public/template/*.html"))
+			templates = template.Must(template.New("abc").Funcs(fns).ParseGlob("public/template/*.html"))
 			r := mux.NewRouter()
 			r.HandleFunc("/main", mainPage)
 			r.HandleFunc("/topo", dcTopoPageForm)
+			r.HandleFunc("/datacenters", datacentersPage)
+			r.HandleFunc("/datacenter/{datacenterName}", dcPage)
+			r.HandleFunc("/newdatacenter", newDatacenterPage)
 			r.HandleFunc("/topo/{user}/datacenter/{datacenterName}", dcTopoPage)
 			r.HandleFunc("/uploadTopo/{user}/datacenter/{dcname}", dcUploadTopo)
 			r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
