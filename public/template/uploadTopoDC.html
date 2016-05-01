@@ -1,0 +1,17 @@
+{{define "uploadTopoDC"}}<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Topology for Datacenter {{.DatacenterName}}</title>
+</head>
+<body>
+<h1>Upload multiple files with fields</h1>
+
+<form action="/uploadTopo/{{.User}}/datacenter/{{.DatacenterName}}" method="post" enctype="multipart/form-data">
+     <input type="hidden" name="user" value="{{.User}}">
+     <input type="hidden" name="datacenterName" value="{{.DatacenterName}}">
+    Files: <input type="file" name="file" multiple><br><br>
+    <input type="submit" value="Submit">
+</form>
+</body>
+</html>{{end}}

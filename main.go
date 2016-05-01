@@ -4,11 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/engine/standard"
+	"github.com/labstack/echo/middleware"
 
 	"gopkg.in/yaml.v2"
 )
@@ -28,9 +33,23 @@ func main() {
 
 	// From DC File
 	if len(os.Args) == 2 {
-		FromDCFile(os.Args[1])
+		if os.Args[1] == "server" {
+			e := echo.New()
+			e.Use(middleware.Logger())
+			e.Use(middleware.Recover())
+			e.Use(middleware.Static("public"))
+			t := &Template{
+				templates: template.Must(template.ParseGlob("public/template/*.html")),
+			}
+			e.SetRenderer(t)
+			e.GET("/topo", dcTopoPageForm)
+			e.GET("/topo/:user/datacenter/:datacenterName", dcTopoPage)
+			e.POST("/uploadTopo/:user/datacenter/:dcname", dcUploadTopo)
+			e.Run(standard.New(":1323"))
+		} else {
+			FromDCFile(os.Args[1])
+		}
 		return
-
 	}
 
 	// From folder
