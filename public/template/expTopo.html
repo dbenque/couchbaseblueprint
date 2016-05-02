@@ -1,15 +1,46 @@
 {{define "expTopo"}}
 {{template "head" .}}
 
+    {{ if (len .Error) }}
+    <div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+  {{ .Error }}
+{{end}}
+
 <form action="#" method="post">
   <div class="form-group">
-    <label for="topoArea">Topology Experiments</label>
-    <textarea class="form-control" rows="3" id="topoArea" name="topoArea">{{.Topo}}</textarea>
-    <label for="envArea">Environment Experiments</label>
-    <textarea class="form-control" rows="3" id="envArea" name="envArea">{{.Env}}</textarea>
+    <table>
+      <tr><td>
+    <label for="topoArea">Topology Experiments (yaml)</label>
+    {{ if (len .ErrTopo) }}
+    <div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+  {{ .ErrTopo }}
+    </div>
+    {{ end }}    
+    <textarea class="form-control" cols="80" rows="25" id="topoArea" name="topoArea">{{.Topo}}</textarea>
+    </td>
+    <td>&nbsp;&nbsp;</td>
+    <td>
+  <label for="envArea">Environment Experiments (yaml)</label>
+    {{ if (len .ErrEnv) }}
+    <div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+  {{ .ErrEnv }}
+    </div>
+    {{ end }}
+    <textarea class="form-control" cols="30" rows="25" id="envArea" name="envArea">{{.Env}}</textarea>
   </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
+  </td></tr>
+  <tr><td>&nbsp;</td></tr>
+    <tr><td>  <button type="submit" class="btn btn-primary">Submit</button> </td></tr>
+    </table>
 </form>
+
+<img src="{{ (imgExpTopo .User) }}">
 
 {{template "foot" .}}
 {{end}}
