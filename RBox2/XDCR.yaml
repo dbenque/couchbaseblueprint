@@ -3,6 +3,8 @@ xdcrdefs:
   bidirectional: false
   source:
     Type: MCast
+  sourceExclude:
+    Role: Stat
   destination:
     Type: BCast
   groupOn:
@@ -14,6 +16,8 @@ xdcrdefs:
   bidirectional: false
   source:
     Type: BCast
+  sourceExclude:
+    Role: Stat
   destination:
     Type: Child
   groupOn:
@@ -22,3 +26,30 @@ xdcrdefs:
   - Datacenter
   args: []
   color: blue
+- rule: custom
+  bidirectional: false
+  source:
+    Type: Child
+    Role: Stat
+  destination:
+    Type: BCast
+    Role: Stat
+  groupOn:
+  - Role
+  - ClusterGroup
+  - Datacenter
+  args: []
+  color: green
+- rule: custom
+  bidirectional: false
+  source:
+    Type: BCast
+    Role: Stat
+  destination:
+    Type: MCast
+    Role: Stat
+  groupOn:
+  - Role
+  - Datacenter
+  args: []
+  color: green

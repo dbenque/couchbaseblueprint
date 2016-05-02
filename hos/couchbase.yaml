@@ -1,25 +1,23 @@
 clustergroups:
-- name: CG
+- name: AHP
   peakToken:
-  - "hyatt"
+  - ""
   clusters:
-  - name: Booking
+  - name: ClusterHOS
     instances:
     - A
     - B
     buckets:
-    - name: Resa
+    - name: Booking
       ramQuota: 0
-      cbReplicatNumber: 0
       labels:
         Role: Resa
-    - name: ResaRead
+    - name: BookingRead
       ramQuota: 0
       cbReplicatNumber: 0
       labels:
         Role: ResaRead
     - name: Shopping
       ramQuota: 0
-      cbReplicatNumber: 0
       labels:
         Role: Shop

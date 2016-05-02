@@ -32,6 +32,9 @@ var fns = template.FuncMap{
 	"ListUsers": func() []string {
 		return listUsers()
 	},
+	"listDatacenter": func(user string) []string {
+		return listDatacenter(user)
+	},
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
@@ -105,6 +108,27 @@ func datacentersPage(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "datacenters", data)
 }
 
+func deleteUserPage(w http.ResponseWriter, r *http.Request) {
+	os.RemoveAll(userDirectory(mux.Vars(r)["user"]))
+	http.Redirect(w, r, "/users", http.StatusTemporaryRedirect)
+}
+
+func deleteDatacenterPage(w http.ResponseWriter, r *http.Request) {
+	user := getuser(r)
+	if user == "" {
+		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+		return
+	}
+	dcname := mux.Vars(r)["datacenterName"]
+	version := mux.Vars(r)["version"]
+	
+	folder := filepath.Join(datacenterDirectory(user,dcname))
+	if version!="" {
+		folder = filepath.Join(folder,version)
+	}
+	os.RemoveAll(folder)
+	http.Redirect(w, r, "/datacenters", http.StatusTemporaryRedirect)	
+}
 func newDatacenterPage(w http.ResponseWriter, r *http.Request) {
 	user := getuser(r)
 	if user == "" {
@@ -113,7 +137,7 @@ func newDatacenterPage(w http.ResponseWriter, r *http.Request) {
 	}
 	r.ParseForm()
 	d := r.Form.Get("datacenterName")
-	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusMovedPermanently)
+	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusTemporaryRedirect)
 }
 
 func dcPage(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +147,7 @@ func dcPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := mux.Vars(r)["datacenterName"]
-	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusMovedPermanently)
+	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusTemporaryRedirect)
 }
 
 func dcTopoPageForm(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +155,7 @@ func dcTopoPageForm(w http.ResponseWriter, r *http.Request) {
 	d := mux.Vars(r)["datacenterName"]
 	fmt.Printf("USer %s, datacenter %s\n", u, d)
 
-	http.Redirect(w, r, "/topo/"+u+"/datacenter/"+d, http.StatusMovedPermanently)
+	http.Redirect(w, r, "/topo/"+u+"/datacenter/"+d, http.StatusTemporaryRedirect)
 }
 
 func dcTopoPage(w http.ResponseWriter, r *http.Request) {
@@ -159,6 +183,28 @@ func dcTopoPage(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "topoDC", data)
 }
 
+func uploadFile(r*http.Request,formField,destinationFilePath string) error {
+	// Source
+	file, _, err := r.FormFile(formField)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Destination
+	dst, err := os.Create(destinationFilePath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, file); err != nil {		
+		return err
+	}
+	return nil
+}
+
 func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
 	user := mux.Vars(r)["user"]
 	datacenterName := mux.Vars(r)["dcname"]
@@ -176,33 +222,24 @@ func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
 	dir := filepath.Join(dirDc, version)
 	os.MkdirAll(dir, perm)
 
-	// Source
-	file, _, err := r.FormFile("file")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	defer file.Close()
-
-	// Destination
 	dstPath := filepath.Join(dir, "topodef.yaml")
-	dst, err := os.Create(dstPath)
-	if err != nil {
+	if err := uploadFile(r,"file",dstPath); err!=nil {
+		fmt.Printf("%#v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer dst.Close()
-
-	// Copy
-	if _, err = io.Copy(dst, file); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	
+	dstEnvPath := filepath.Join(dir, "topoenv.yaml")
+	
+	if err := uploadFile(r,"envfile",dstEnvPath); err==nil {
+			dstPath = dstPath+"+"+dstEnvPath
 	}
 
 	// creation of VDatacenter topology target
 	var buf bytes.Buffer
 	errDc, s := TopoFromFile(dstPath, []Datacenter{NewDatacenter(datacenterName)}, &buf)
 	if errDc != nil {
+		fmt.Printf("%#v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -220,14 +257,34 @@ func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
 	cmd.Stdout = &out
 	cmd.Stderr = &outerr
 	if err := cmd.Run(); err != nil {
+		fmt.Printf("Error Dot: %#v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+datacenterName, http.StatusMovedPermanently)
+	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+datacenterName, http.StatusTemporaryRedirect)
+}
+
+func xdcrPage(w http.ResponseWriter, r *http.Request) {
+	user:=getuser(r)
+
+		data := struct {
+		User           string
+		Versions       []int
+		Version        string
+	}{
+		User:           user,
+		Versions:       []int{},
+		Version:        "",
+	}
+	renderTemplate(w, "xdcr", data)
 }
 
 func datacenterURI(user, datacenterName string) string {
 	return filepath.Join("/data", user, "dc", datacenterName)
+}
+
+func userDirectory(user string) string {
+	return filepath.Join("public", "data", user)
 }
 
 func datacenterDirectory(user, datacenterName string) string {
@@ -242,6 +299,15 @@ func listUsers() []string {
 	}
 	return users
 }
+func listDatacenter(user string) []string {
+	dcs := []string{}
+	files, _ := ioutil.ReadDir(filepath.Join(userDirectory(user),"dc"))
+	for _, file := range files {
+		dcs = append(dcs, file.Name())
+	}
+	return dcs
+}
+
 func listVersions(folderPath string) ([]int, error) {
 	versions := []int{}
 	files, err := ioutil.ReadDir(folderPath)

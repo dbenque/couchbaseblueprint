@@ -5,9 +5,9 @@ import (
 	"io"
 )
 
-var DotLevels = map[string]Bucket{}
-
 func (c *Cluster) Dot(w io.Writer) {
+
+	var DotLevels = map[string]Bucket{}
 
 	fmt.Fprintf(w, "subgraph cluster_%s {\n", c.Path())
 	fmt.Fprintf(w, "label=\"%s %s\";\n", c.Name, c.Instance)

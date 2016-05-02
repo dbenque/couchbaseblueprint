@@ -62,7 +62,8 @@ clustergroups:
   clusters:
   - name: CBBOX
     instances:
-    - ""
+    - "A"
+    - "B"
     buckets:
     - name: Rbox
       ramQuota: 0

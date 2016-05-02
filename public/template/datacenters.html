@@ -4,20 +4,24 @@
 {{ if (len .Datacenters) }}
 
 <h1>Datacenters</h1>
-<table class="table table-condensed table-over">
+<div class="table-responsive">
+<table class="table table-over">
   <thead>
     <th>Name</th>
-    <th>Actions<th>
+    <th>View</th>
+    <th>Delete</th>
   </thead>
   <tbody>
       {{range .Datacenters}}
         <tr>
             <td>{{.Name}}</td>
-            <td><button onclick="location.href='/datacenter/{{.Name}}';" type="button" class="btn btn-primary">view</button></td>            
+            <td><button onclick="location.href='/datacenter/{{.Name}}';" type="button" class="btn btn-primary">view</button></td>
+            <td><button onclick="location.href='/deletedatacenter/{{.Name}}';" type="button" class="btn btn-danger">delete</button></td>            
         </tr>
       {{end}}
   </tbody>
 </table>
+</div>
 
 {{ end }}
 <h1>New Datacenter</h1>

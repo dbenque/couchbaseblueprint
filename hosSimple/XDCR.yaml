@@ -3,7 +3,11 @@ xdcrdefs:
   bidirectional: true
   source:
     Role: Resa
-  groupOn:
-    - ClusterGroup
   args: []
   color: red
+- rule: ring
+  bidirectional: true
+  source:
+    Role: Shop
+  args: []
+  color: blue

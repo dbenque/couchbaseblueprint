@@ -32,12 +32,16 @@ func main() {
 			r := mux.NewRouter()
 			r.HandleFunc("/main", mainPage)
 			r.HandleFunc("/users", usersPage)
+			r.HandleFunc("/deleteuser/{user}", deleteUserPage)
 			r.HandleFunc("/topo", dcTopoPageForm)
-			r.HandleFunc("/datacenters", datacentersPage)
+			r.HandleFunc("/datacenters", datacentersPage)			
+			r.HandleFunc("/deletedatacenter/{datacenterName}/{version}", deleteDatacenterPage)
+			r.HandleFunc("/deletedatacenter/{datacenterName}", deleteDatacenterPage)
 			r.HandleFunc("/datacenter/{datacenterName}", dcPage)
 			r.HandleFunc("/newdatacenter", newDatacenterPage)
 			r.HandleFunc("/topo/{user}/datacenter/{datacenterName}", dcTopoPage)
 			r.HandleFunc("/uploadTopo/{user}/datacenter/{dcname}", dcUploadTopo)
+			r.HandleFunc("/xdcr", xdcrPage)
 			r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 			http.Handle("/", r)
 			http.ListenAndServe(":1323", nil)
@@ -147,6 +151,8 @@ func TopoFromFile(files string, DCs []Datacenter, w io.Writer) (error, []Datacen
 			fmt.Println(err)
 			return err, nil
 		}
+		tmpFile := file		
+		defer os.Remove(tmpFile)
 	}
 
 	b, err := ioutil.ReadFile(file)
@@ -181,7 +187,6 @@ func TopoFromFile(files string, DCs []Datacenter, w io.Writer) (error, []Datacen
 }
 
 func XDCRFromFile(files string, DCs []Datacenter, w io.Writer) error {
-
 	splitted := strings.Split(files, "+")
 	file := splitted[0]
 	format := strings.Split(file, ".")[1]
@@ -193,6 +198,8 @@ func XDCRFromFile(files string, DCs []Datacenter, w io.Writer) error {
 			fmt.Println(err)
 			return err
 		}
+		tmpFile:=file
+		defer os.Remove(tmpFile)
 	}
 
 	b, err := ioutil.ReadFile(file)

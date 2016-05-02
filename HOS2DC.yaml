@@ -1,4 +1,4 @@
 topos:
-  hosSimple/couchbase.yaml: ["DC1","DC2"]
+  hosSimple/couchbase.yaml: ["DC_West","DC_East","Erding"]
 xdcrs:
-  hosSimple/XDCR.yaml: ["DC1","DC2"]
+  hosSimple/XDCR.yaml: ["DC_West","DC_East","Erding"]
