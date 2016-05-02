@@ -1,19 +1,36 @@
 {{define "xdcr"}}
 {{template "head" .}}
 
-<h1>New XDCR</h1>
+{{ if (len (listXDCR .User))}}
+{{ if .Version }}<h1>XDCRs - v{{.Version}}</h1>{{ else }}<h1>XDCRs</h1>{{ end}}
 
-<h1>Upload new topology</h1>
-<form action="/uploadxdcr/{{.User}}" method="post" enctype="multipart/form-data">
+{{ range (listXDCR .User) }}
+<a class="btn btn-default" href="xdcr?v={{.}}">{{.}}</a>
+{{end}}
+{{end}}
+{{$imgpath := (ImgXDCRPath .User .Version) }}
+{{ if (and $imgpath (len .Version)) }}
+<img src="{{ $imgpath }}">
+{{ end }}
+{{ if .Version }}
+<h1>Delete</h1>
+<button onclick="location.href='/deletexdcr/v{{.Version}}';" type="button" class="btn btn-danger">delete version {{.Version}}</button>
+{{ end }}
+
+<h1>New XDCR</h1>
+<form action="/uploadxdcr" method="post" enctype="multipart/form-data">
   <div class="form-group">
     <label for="xdcrfile">xdcr file</label>
     <input type="file" class="form-control" name="xdcrfile" id="xdcrfile">
     <label for="envfile">xdcr file</label>
     <input type="file" class="form-control" name="envfile" id="envfile">
+    </div>
+    <label for="datacenterselection">Datacenters</label>
+    <div class="form-group" id="datacenterselection">
     {{ range (listDatacenter .User) }}
     <div class="checkbox">
     <label>
-      <input type="checkbox"> {{.}}
+      <input type="checkbox" name="datacenters" value="{{.}}">{{.}}</input>
     </label>
     </div>
     {{ end }}
@@ -21,7 +38,5 @@
   </div>
   <button type="submit" class="btn btn-primary">Upload</button>
 </form>
-
-
 {{template "foot" .}}
 {{end}}

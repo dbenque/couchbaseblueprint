@@ -42,6 +42,11 @@ func main() {
 			r.HandleFunc("/topo/{user}/datacenter/{datacenterName}", dcTopoPage)
 			r.HandleFunc("/uploadTopo/{user}/datacenter/{dcname}", dcUploadTopo)
 			r.HandleFunc("/xdcr", xdcrPage)
+			r.HandleFunc("/deletexdcr/{version}", deleteXDCRPage)
+			r.HandleFunc("/uploadxdcr", uploadxdcr)
+			r.HandleFunc("/experiment/topo", experimentTopo)
+			r.HandleFunc("/experiment/xdcr", experimentXDCR)
+			
 			r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 			http.Handle("/", r)
 			http.ListenAndServe(":1323", nil)
@@ -88,6 +93,29 @@ func ToFile(v interface{}, filePath string) {
 	}
 }
 
+func DatacenterFromFile(file string) (*Datacenter,error) {
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		fmt.Println(err)
+		return nil,err
+	}
+	
+	format := strings.Split(file, ".")[1]	
+	var datacenter Datacenter
+	
+		switch format {
+	case "json":
+		err = json.Unmarshal(b, &datacenter)
+	case "yaml":
+		err = yaml.Unmarshal(b, &datacenter)
+	}
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return &datacenter,nil
+	
+}
 func ProcessEnv(file, envfile string) (error, string) {
 
 	b, err := ioutil.ReadFile(file)

@@ -1,0 +1,15 @@
+{{define "expTopo"}}
+{{template "head" .}}
+
+<form action="#" method="post">
+  <div class="form-group">
+    <label for="topoArea">Topology Experiments</label>
+    <textarea class="form-control" rows="3" id="topoArea" name="topoArea">{{.Topo}}</textarea>
+    <label for="envArea">Environment Experiments</label>
+    <textarea class="form-control" rows="3" id="envArea" name="envArea">{{.Env}}</textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+{{template "foot" .}}
+{{end}}
