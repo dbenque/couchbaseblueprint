@@ -1,0 +1,31 @@
+{{define "topoDC"}}
+{{template "head" .}}
+
+{{ if .Versions}}
+<h1>Versions</h1>
+{{$p := (print "/topo/" .User "/datacenter/" .DatacenterName)}}{{range .Versions}}<a class="btn btn-default" href="{{$p}}?v={{.}}">{{.}}</a>{{end}}
+{{ end }}
+
+{{$imgpath := (ImgPath .User .DatacenterName .Version) }}
+{{ if (and $imgpath (len .Version ))}}
+<h1>Topology</h1>
+<img src="{{ $imgpath }}">
+<h1>Definition</h1>
+<a href='/data/{{.User}}/dc/{{.DatacenterName}}/v{{.Version}}/topodef.yaml'>topo.yaml</a><br>
+<h1>Instances</h1>
+<a href='/data/{{.User}}/dc/{{.DatacenterName}}/v{{.Version}}/topo.yaml'>topo.yaml</a><br>
+{{ end }}
+
+<h1>Upload new topology</h1>
+<form action="/uploadTopo/{{.User}}/datacenter/{{.DatacenterName}}" method="post" enctype="multipart/form-data">
+  <div class="form-group">
+     <input type="hidden" name="user" value="{{.User}}">
+     <input type="hidden" name="datacenterName" value="{{.DatacenterName}}">
+    <label for="file">Topology File</label>
+    <input type="file" class="form-control" name="file" id="file" placeholder="datacenter name">
+  </div>
+  <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+
+{{template "foot" .}}
+{{end}}

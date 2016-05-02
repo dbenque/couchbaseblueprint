@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 
 	"gopkg.in/yaml.v2"
 )
@@ -23,9 +27,24 @@ func main() {
 
 	// From DC File
 	if len(os.Args) == 2 {
-		FromDCFile(os.Args[1])
+		if os.Args[1] == "server" {
+			templates = template.Must(template.New("abc").Funcs(fns).ParseGlob("public/template/*.html"))
+			r := mux.NewRouter()
+			r.HandleFunc("/main", mainPage)
+			r.HandleFunc("/users", usersPage)
+			r.HandleFunc("/topo", dcTopoPageForm)
+			r.HandleFunc("/datacenters", datacentersPage)
+			r.HandleFunc("/datacenter/{datacenterName}", dcPage)
+			r.HandleFunc("/newdatacenter", newDatacenterPage)
+			r.HandleFunc("/topo/{user}/datacenter/{datacenterName}", dcTopoPage)
+			r.HandleFunc("/uploadTopo/{user}/datacenter/{dcname}", dcUploadTopo)
+			r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
+			http.Handle("/", r)
+			http.ListenAndServe(":1323", nil)
+		} else {
+			FromDCFile(os.Args[1])
+		}
 		return
-
 	}
 
 	// From folder
