@@ -1,0 +1,29 @@
+# The following caracters are separator
+# that should never be used in keyword and values
+# tab "    ", space " ", dash "-", dot "." , "[]", "()"
+#
+# If you need separator use "_"
+#
+clustergroups:
+- name: ClusterGroupName
+  peakToken: [ OnePeak ]
+  clusters:
+  - name: ClusterName
+    instances: [ C1,C2 ]
+    buckets:
+    - name: BucketName1
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        LabelName1: value1
+        LabelName2: value2
+    - name: BucketName2
+      ramQuota: 0
+      cbReplicatNumber: 0
+      labels:
+        LabelName1: value10
+        LabelName2: value20
+        # Label named 'Level' are used by some xdcr rules
+        # Label named 'name' are overwritten by the real name
+        Level: 0
+        name: foo

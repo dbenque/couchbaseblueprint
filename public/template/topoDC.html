@@ -1,6 +1,6 @@
 {{define "topoDC"}}
 {{template "head" .}}
-{{ if .Version }}<h1>Datacenter {{ .DatacenterName}} - v{{.Version}}<h1>{{ else }}Datacenter {{ .DatacenterName}}<h1>{{end}}
+{{ if .Version }}<h1>Datacenter {{ .DatacenterName}} - v{{.Version}}</h1>{{ else }}<h1>Datacenter {{ .DatacenterName}}</h1>{{end}}
  <hr>
 {{ if .Versions}}
 <h1>Versions</h1>

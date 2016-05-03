@@ -34,7 +34,7 @@ func main() {
 			r.HandleFunc("/users", usersPage)
 			r.HandleFunc("/deleteuser/{user}", deleteUserPage)
 			r.HandleFunc("/topo", dcTopoPageForm)
-			r.HandleFunc("/datacenters", datacentersPage)			
+			r.HandleFunc("/datacenters", datacentersPage)
 			r.HandleFunc("/deletedatacenter/{datacenterName}/{version}", deleteDatacenterPage)
 			r.HandleFunc("/deletedatacenter/{datacenterName}", deleteDatacenterPage)
 			r.HandleFunc("/datacenter/{datacenterName}", dcPage)
@@ -45,8 +45,9 @@ func main() {
 			r.HandleFunc("/deletexdcr/{version}", deleteXDCRPage)
 			r.HandleFunc("/uploadxdcr", uploadxdcr)
 			r.HandleFunc("/experiment/topo", experimentTopo)
+			r.HandleFunc("/experiment/topopush", experimentTopopush)
 			r.HandleFunc("/experiment/xdcr", experimentXDCR)
-			
+
 			r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 			http.Handle("/", r)
 			http.ListenAndServe(":1323", nil)
@@ -93,17 +94,17 @@ func ToFile(v interface{}, filePath string) {
 	}
 }
 
-func DatacenterFromFile(file string) (*Datacenter,error) {
+func DatacenterFromFile(file string) (*Datacenter, error) {
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		fmt.Println(err)
-		return nil,err
+		return nil, err
 	}
-	
-	format := strings.Split(file, ".")[1]	
+
+	format := strings.Split(file, ".")[1]
 	var datacenter Datacenter
-	
-		switch format {
+
+	switch format {
 	case "json":
 		err = json.Unmarshal(b, &datacenter)
 	case "yaml":
@@ -113,8 +114,8 @@ func DatacenterFromFile(file string) (*Datacenter,error) {
 		fmt.Println(err)
 		return nil, err
 	}
-	return &datacenter,nil
-	
+	return &datacenter, nil
+
 }
 func ProcessEnv(file, envfile string) (error, string) {
 
@@ -179,7 +180,7 @@ func TopoFromFile(files string, DCs []Datacenter, w io.Writer) (error, []Datacen
 			fmt.Println(err)
 			return err, nil
 		}
-		tmpFile := file		
+		tmpFile := file
 		defer os.Remove(tmpFile)
 	}
 
@@ -226,7 +227,7 @@ func XDCRFromFile(files string, DCs []Datacenter, w io.Writer) error {
 			fmt.Println(err)
 			return err
 		}
-		tmpFile:=file
+		tmpFile := file
 		defer os.Remove(tmpFile)
 	}
 

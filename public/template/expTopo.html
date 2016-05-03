@@ -12,7 +12,7 @@
   <div class="form-group">
     <table>
       <tr><td>
-    <label for="topoArea">Topology Experiments (yaml)</label>
+    <label for="topoArea">Topology Experiments (yaml) <a href="/examples/topodef.yaml" target="_blank">example</a></label>
     {{ if (len .ErrTopo) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
@@ -24,7 +24,7 @@
     </td>
     <td>&nbsp;&nbsp;</td>
     <td>
-  <label for="envArea">Environment Experiments (yaml)</label>
+  <label for="envArea">Environment Experiments (yaml) <a href="/examples/topoenv.yaml" target="_blank">example</a></label>
     {{ if (len .ErrEnv) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
@@ -32,7 +32,7 @@
   {{ .ErrEnv }}
     </div>
     {{ end }}
-    <textarea class="form-control" cols="30" rows="25" id="envArea" name="envArea">{{.Env}}</textarea>
+    <textarea class="form-control" cols="40" rows="25" id="envArea" name="envArea">{{.Env}}</textarea>
   </div>
   </td></tr>
   <tr><td>&nbsp;</td></tr>
@@ -40,7 +40,29 @@
     </table>
 </form>
 
+{{ if (and (len (imgExpTopo .User)) (len .Topo))}}
 <img src="{{ (imgExpTopo .User) }}">
 
+{{ if (len (listDatacenter .User))}}
+<h1>Push to Datacenter(s)</h1>
+<form action="/experiment/topopush" method="post">
+  <div class="form-group">
+    <textarea style="display:none" name="topoToPush">{{.Topo}}</textarea>
+    <textarea style="display:none" name="envToPush">{{.Env}}</textarea>
+    <label for="datacenterselection">Datacenters</label>
+    <div class="form-group" id="datacenterselection">
+    {{ range (listDatacenter .User) }}
+    <div class="checkbox">
+    <label>
+      <input type="checkbox" name="datacenters" value="{{.}}">{{.}}</input>
+    </label>
+    </div>
+    {{ end }}    
+  </div>
+  <button type="submit" class="btn btn-primary">Push</button>
+</form>
+{{ end }}
+
+{{ end }}
 {{template "foot" .}}
 {{end}}

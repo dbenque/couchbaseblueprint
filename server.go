@@ -407,6 +407,8 @@ func xdcrPage(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "xdcr", data)
 }
 
+var topoFileList = []string{"topo.png", "topo.yaml", "topo.json", "topo.dot", "topodef.yaml", "topoenv.yaml"}
+
 func experimentTopo(w http.ResponseWriter, r *http.Request) {
 	user := getuser(r)
 	if user == "" {
@@ -421,12 +423,9 @@ func experimentTopo(w http.ResponseWriter, r *http.Request) {
 	os.MkdirAll(dirExp, perm)
 
 	//clean previous input
-	os.Remove(filepath.Join(dirExp, "topo.png"))
-	os.Remove(filepath.Join(dirExp, "topo.yaml"))
-	os.Remove(filepath.Join(dirExp, "topo.json"))
-	os.Remove(filepath.Join(dirExp, "topo.dot"))
-	os.Remove(filepath.Join(dirExp, "topodef.yaml"))
-	os.Remove(filepath.Join(dirExp, "topoenv.yaml"))
+	for _, f := range topoFileList {
+		os.Remove(filepath.Join(dirExp, f))
+	}
 
 	r.ParseForm()
 	data := struct {
@@ -445,39 +444,91 @@ func experimentTopo(w http.ResponseWriter, r *http.Request) {
 		Error:   "",
 	}
 
-	defFiles := ""
-	// validate and write topodef
-	var topodef ClusterGroupDefBluePrint
-	if err := yaml.Unmarshal([]byte(data.Topo), &topodef); err != nil {
+	if err := createTopoFilesFromStrings(data.Topo, data.Env, dirExp, "Datacenter_Experiment"); err != nil {
 		data.ErrTopo = err.Error()
-		renderTemplate(w, "expTopo", data)
-		return
-	}
-	defFiles = filepath.Join(dirExp, "topodef.yaml")
-	ioutil.WriteFile(defFiles, []byte(data.Topo), 0644)
-
-	// validate and write environment
-	environment := len(data.Env) > 0
-	if environment {
-		var envdata EnvData
-		if err := yaml.Unmarshal([]byte(data.Env), &envdata); err != nil {
-			data.ErrEnv = err.Error()
-			renderTemplate(w, "expTopo", data)
-			return
-		}
-		envDefFile := filepath.Join(dirExp, "topoenv.yaml")
-		ioutil.WriteFile(envDefFile, []byte(data.Env), 0644)
-		defFiles = defFiles + "+" + envDefFile
-	}
-
-	//write the files
-	if err := createTopoFiles(defFiles, dirExp, "Experiment_Datacenter"); err != nil {
-		data.Error = err.Error()
 		renderTemplate(w, "expTopo", data)
 		return
 	}
 
 	renderTemplate(w, "expTopo", data)
+}
+
+func createTopoFilesFromStrings(topoStr, envStr, dirExp, datacenterName string) error {
+
+	defFiles := ""
+	// validate and write topodef
+	var topodef ClusterGroupDefBluePrint
+	if err := yaml.Unmarshal([]byte(topoStr), &topodef); err != nil {
+		return err
+	}
+	defFiles = filepath.Join(dirExp, "topodef.yaml")
+	ioutil.WriteFile(defFiles, []byte(topoStr), 0644)
+
+	// validate and write environment
+	environment := len(envStr) > 0
+	if environment {
+		var envdata EnvData
+		if err := yaml.Unmarshal([]byte(envStr), &envdata); err != nil {
+			return err
+		}
+		envDefFile := filepath.Join(dirExp, "topoenv.yaml")
+		ioutil.WriteFile(envDefFile, []byte(envStr), 0644)
+		defFiles = defFiles + "+" + envDefFile
+	}
+
+	//write the files
+	if err := createTopoFiles(defFiles, dirExp, datacenterName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func experimentTopopush(w http.ResponseWriter, r *http.Request) {
+	user := getuser(r)
+	if user == "" {
+		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+		log(r, "no user")
+		return
+	}
+
+	r.ParseForm()
+	data := struct {
+		User    string
+		Topo    string
+		ErrTopo string
+		Env     string
+		ErrEnv  string
+		Error   string
+	}{
+		User: user,
+		Topo: r.Form.Get("topoToPush"),
+		Env:  r.Form.Get("envToPush"),
+	}
+
+	dcnameList := r.Form["datacenters"]
+	// Datacenter list
+	for _, dcname := range dcnameList {
+		dirDatacenter, err := prepareNextVersion(datacenterDirectory(user, dcname))
+		if err != nil {
+			data.ErrTopo = fmt.Sprintf("Push Failed: %s", err.Error())
+			renderTemplate(w, "expTopo", data)
+			return
+		}
+
+		if err := createTopoFilesFromStrings(data.Topo, data.Env, dirDatacenter, dcname); err != nil {
+			data.ErrTopo = fmt.Sprintf("Push Failed: %s", err.Error())
+			renderTemplate(w, "expTopo", data)
+			return
+		}
+	}
+
+	if len(dcnameList) == 1 {
+		v, _ := latestVersion(datacenterDirectory(user, dcnameList[0]))
+		http.Redirect(w, r, "/topo/"+user+"/datacenter/"+dcnameList[0]+"?v="+v[1:], http.StatusTemporaryRedirect)
+		return
+	}
+	http.Redirect(w, r, "/datacenters", http.StatusTemporaryRedirect)
 }
 
 func experimentXDCR(w http.ResponseWriter, r *http.Request) {
