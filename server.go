@@ -68,6 +68,35 @@ type linkdc struct {
 	Text string
 }
 
+type userData struct {
+	User string
+}
+
+func getuser(r *http.Request) string {
+	user := ""
+	//check cookie
+	if c, err := r.Cookie("user"); err == nil {
+		user = c.Value
+		return user
+	}
+
+	return mux.Vars(r)["user"]
+}
+
+func UserHandler(f func(http.ResponseWriter,
+	*http.Request, string)) func(http.ResponseWriter,
+	*http.Request) {
+	return func(w http.ResponseWriter,
+		r *http.Request) {
+		user := getuser(r)
+		if user == "" {
+			http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+			return
+		}
+		f(w, r, user)
+	}
+}
+
 func xdcrDatacenterLinks(user, pathToDatacentersTxt string) []linkdc {
 
 	links := []linkdc{}
@@ -115,8 +144,7 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "mainPage", data)
 }
 
-func usersPage(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
+func usersPage(w http.ResponseWriter, r *http.Request, user string) {
 	data := struct {
 		User string
 	}{
@@ -125,23 +153,7 @@ func usersPage(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "users", data)
 }
 
-func getuser(r *http.Request) string {
-	user := ""
-	//check cookie
-	if c, err := r.Cookie("user"); err == nil {
-		user = c.Value
-		return user
-	}
-
-	return mux.Vars(r)["user"]
-}
-
-func datacentersPage(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
+func datacentersPage(w http.ResponseWriter, r *http.Request, user string) {
 	folderPath := filepath.Join("public", "data", user, "dc")
 	files, _ := ioutil.ReadDir(folderPath)
 	type dc struct {
@@ -180,12 +192,7 @@ func deleteXDCRPage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/xdcr", http.StatusTemporaryRedirect)
 }
 
-func deleteDatacenterPage(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
+func deleteDatacenterPage(w http.ResponseWriter, r *http.Request, user string) {
 	dcname := mux.Vars(r)["datacenterName"]
 	version := mux.Vars(r)["version"]
 
@@ -196,31 +203,20 @@ func deleteDatacenterPage(w http.ResponseWriter, r *http.Request) {
 	os.RemoveAll(folder)
 	http.Redirect(w, r, "/datacenters", http.StatusTemporaryRedirect)
 }
-func newDatacenterPage(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
+func newDatacenterPage(w http.ResponseWriter, r *http.Request, user string) {
 	r.ParseForm()
 	d := r.Form.Get("datacenterName")
 	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusTemporaryRedirect)
 }
 
-func dcPage(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
+func dcPage(w http.ResponseWriter, r *http.Request, user string) {
 	d := mux.Vars(r)["datacenterName"]
 	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusTemporaryRedirect)
 }
 
-func dcTopoPage(w http.ResponseWriter, r *http.Request) {
+func dcTopoPage(w http.ResponseWriter, r *http.Request, user string) {
 	r.ParseForm()
 	version := r.Form.Get("v")
-	user := getuser(r)
 	datacenterName := mux.Vars(r)["datacenterName"]
 	versions, _ := listVersions(datacenterDirectory(user, datacenterName))
 
@@ -264,12 +260,7 @@ func uploadFile(r *http.Request, formField, destinationFilePath string) error {
 	return nil
 }
 
-func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
+func dcUploadTopo(w http.ResponseWriter, r *http.Request, user string) {
 	datacenterName := mux.Vars(r)["dcname"]
 
 	// Prepare Folder for next topo
@@ -329,13 +320,7 @@ func createTopoFiles(defFiles, dir, datacenterName, version string) error {
 	return nil
 }
 
-func uploadxdcr(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
-
+func uploadxdcr(w http.ResponseWriter, r *http.Request, user string) {
 	log(r, "uploadxdcr")
 
 	// Prepare Folder for xdcr
@@ -441,13 +426,7 @@ func createXDCRFiles(user, defFiles, dir string, datacenters []Datacenter) error
 	return nil
 }
 
-func xdcrPage(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
-
+func xdcrPage(w http.ResponseWriter, r *http.Request, user string) {
 	r.ParseForm()
 	version := r.Form.Get("v")
 
@@ -468,13 +447,7 @@ func xdcrPage(w http.ResponseWriter, r *http.Request) {
 var topoFileList = []string{"topo.png", "topo.yaml", "topo.json", "topo.dot", "topodef.yaml", "topoenv.yaml"}
 var xdcrFileList = []string{"xdcr.png", "xdcrdef.yaml", "xdcrenv.yaml", "datacenters.txt"}
 
-func experimentTopo(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
-
+func experimentTopo(w http.ResponseWriter, r *http.Request, user string) {
 	// build directory in case we start from scratch
 	var perm os.FileMode = 0777
 	dirExp := experimentDirectory(user)
@@ -542,13 +515,7 @@ func createTopoFilesFromStrings(topoStr, envStr, dirExp, datacenterName, version
 	return nil
 }
 
-func experimentTopopush(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
-
+func experimentTopopush(w http.ResponseWriter, r *http.Request, user string) {
 	r.ParseForm()
 	data := struct {
 		User    string
@@ -588,13 +555,7 @@ func experimentTopopush(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/datacenters", http.StatusTemporaryRedirect)
 }
 
-func experimentXDCR(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
-
+func experimentXDCR(w http.ResponseWriter, r *http.Request, user string) {
 	// build directory in case we start from scratch
 	var perm os.FileMode = 0777
 	dirExp := experimentDirectory(user)
@@ -681,13 +642,7 @@ func experimentXDCR(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "expXdcr", data)
 }
 
-func experimentXDCRsave(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
-
+func experimentXDCRsave(w http.ResponseWriter, r *http.Request, user string) {
 	dir, version, err := prepareNextVersion(xdcrDirectory(user))
 	if err != nil {
 		log(r, "%#v", err)
