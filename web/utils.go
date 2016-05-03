@@ -11,6 +11,28 @@ import (
 	"time"
 )
 
+func uploadFile(r *http.Request, formField, destinationFilePath string) error {
+	// Source
+	file, _, err := r.FormFile(formField)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Destination
+	dst, err := os.Create(destinationFilePath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, file); err != nil {
+		return err
+	}
+	return nil
+}
+
 func copyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
