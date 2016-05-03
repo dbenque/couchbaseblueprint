@@ -201,15 +201,10 @@ func deleteDatacenterPage(w http.ResponseWriter, r *http.Request, user string) {
 func newDatacenterPage(w http.ResponseWriter, r *http.Request, user string) {
 	r.ParseForm()
 	d := r.Form.Get("datacenterName")
-	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/datacenter/"+d, http.StatusTemporaryRedirect)
 }
 
 func dcPage(w http.ResponseWriter, r *http.Request, user string) {
-	d := mux.Vars(r)["datacenterName"]
-	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusTemporaryRedirect)
-}
-
-func dcTopoPage(w http.ResponseWriter, r *http.Request, user string) {
 	r.ParseForm()
 	version := r.Form.Get("v")
 	datacenterName := mux.Vars(r)["datacenterName"]
@@ -284,7 +279,7 @@ func dcUploadTopo(w http.ResponseWriter, r *http.Request, user string) {
 		return
 	}
 
-	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+datacenterName, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/datacenter/"+datacenterName, http.StatusTemporaryRedirect)
 }
 
 func createTopoFiles(defFiles, dir, datacenterName, version string) error {
@@ -544,7 +539,7 @@ func experimentTopopush(w http.ResponseWriter, r *http.Request, user string) {
 
 	if len(dcnameList) == 1 {
 		v, _ := latestVersion(datacenterDirectory(user, dcnameList[0]))
-		http.Redirect(w, r, "/topo/"+user+"/datacenter/"+dcnameList[0]+"?v="+v[1:], http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/datacenter/"+dcnameList[0]+"?v="+v[1:], http.StatusTemporaryRedirect)
 		return
 	}
 	http.Redirect(w, r, "/datacenters", http.StatusTemporaryRedirect)

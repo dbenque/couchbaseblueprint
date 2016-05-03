@@ -39,7 +39,6 @@ func main() {
 			r.HandleFunc("/deletedatacenter/{datacenterName}", UserHandler(deleteDatacenterPage))
 			r.HandleFunc("/datacenter/{datacenterName}", UserHandler(dcPage))
 			r.HandleFunc("/newdatacenter", UserHandler(newDatacenterPage))
-			r.HandleFunc("/topo/{user}/datacenter/{datacenterName}", UserHandler(dcTopoPage))
 			r.HandleFunc("/uploadTopo/{user}/datacenter/{dcname}", UserHandler(dcUploadTopo))
 			r.HandleFunc("/xdcr", UserHandler(xdcrPage))
 			r.HandleFunc("/deletexdcr/{version}", UserHandler(deleteXDCRPage))

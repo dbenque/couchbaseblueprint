@@ -4,7 +4,7 @@
  <hr>
 {{ if .Versions}}
 <h1>Versions</h1>
-{{$p := (print "/topo/" .User "/datacenter/" .DatacenterName)}}{{range .Versions}}<a class="btn btn-default" href="{{$p}}?v={{.}}">{{.}}</a>{{end}}
+{{$p := (print "/datacenter/" .DatacenterName)}}{{range .Versions}}<a class="btn btn-default" href="{{$p}}?v={{.}}">{{.}}</a>{{end}}
 {{ end }}
 
 {{$imgpath := (ImgPath .User .DatacenterName .Version) }}
