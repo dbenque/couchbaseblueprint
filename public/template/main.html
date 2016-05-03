@@ -24,6 +24,7 @@
           <a class="navbar-brand" href="/main">Couchbase Blueprints</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
+          {{ if len .User }}
           <ul class="nav navbar-nav">            
             <li class="active"><a href="/datacenters">Datacenter</a></li>
             <li class="active"><a href="/xdcr">XDCR</a></li>
@@ -35,11 +36,12 @@
             </ul>
             </li>
           </ul>
+          {{ end }}
 
           <form class="navbar-form navbar-right"  method="get" action="/main">
             <div class="form-group">
               <input name="user" type="text" placeholder="user:{{.User}}" class="form-control">
-              <button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-hand-left" aria-hidden="true"></span></button>              
+              <button type="submit" class="btn btn-{{if (len .User)}}success{{else}}danger{{end}}"><span class="glyphicon glyphicon-hand-left" aria-hidden="true"></span></button>              
             </div>
           </form>
         </div><!--/.nav-collapse -->
@@ -52,7 +54,7 @@
     </div><!-- /.container -->
     <div class="container">
       <br><br>
-      <p align="center">Author: David Benque / May 2016 / dbenque@amadeus.com</p>
+      <p align="center">Author: David Benque <img src="/gopher.jpg" height="10%" width="10%">/ May 2016 / dbenque@amadeus.com</p>
      </div>
     <!-- Bootstrap core JavaScript
     ================================================== -->

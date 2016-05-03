@@ -34,7 +34,6 @@ func main() {
 			r.HandleFunc("/", mainPage)
 			r.HandleFunc("/users", usersPage)
 			r.HandleFunc("/deleteuser/{user}", deleteUserPage)
-			r.HandleFunc("/topo", dcTopoPageForm)
 			r.HandleFunc("/datacenters", datacentersPage)
 			r.HandleFunc("/deletedatacenter/{datacenterName}/{version}", deleteDatacenterPage)
 			r.HandleFunc("/deletedatacenter/{datacenterName}", deleteDatacenterPage)

@@ -95,19 +95,17 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
-	user := ""
-	//check cookie
-	if c, err := r.Cookie("user"); err == nil {
-		user = c.Value
-	}
-	//check uri
-	r.ParseForm()
-	userURL := r.Form.Get("user")
-	if userURL != "" {
-		user = userURL
-		expiration := time.Now().Add(24 * time.Hour)
-		cookie := http.Cookie{Name: "user", Value: user, Expires: expiration}
-		http.SetCookie(w, &cookie)
+	user := getuser(r)
+	if user == "" {
+		//check uri
+		r.ParseForm()
+		userURL := r.Form.Get("user")
+		if userURL != "" {
+			user = userURL
+			expiration := time.Now().Add(24 * time.Hour)
+			cookie := http.Cookie{Name: "user", Value: user, Expires: expiration}
+			http.SetCookie(w, &cookie)
+		}
 	}
 	data := struct {
 		User string
@@ -118,7 +116,13 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersPage(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "users", nil)
+	user := getuser(r)
+	data := struct {
+		User string
+	}{
+		User: user,
+	}
+	renderTemplate(w, "users", data)
 }
 
 func getuser(r *http.Request) string {
@@ -126,8 +130,10 @@ func getuser(r *http.Request) string {
 	//check cookie
 	if c, err := r.Cookie("user"); err == nil {
 		user = c.Value
+		return user
 	}
-	return user
+
+	return mux.Vars(r)["user"]
 }
 
 func datacentersPage(w http.ResponseWriter, r *http.Request) {
@@ -211,14 +217,6 @@ func dcPage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/topo/"+user+"/datacenter/"+d, http.StatusTemporaryRedirect)
 }
 
-func dcTopoPageForm(w http.ResponseWriter, r *http.Request) {
-	u := mux.Vars(r)["user"]
-	d := mux.Vars(r)["datacenterName"]
-	fmt.Printf("USer %s, datacenter %s\n", u, d)
-
-	http.Redirect(w, r, "/topo/"+u+"/datacenter/"+d, http.StatusTemporaryRedirect)
-}
-
 func dcTopoPage(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	version := r.Form.Get("v")
@@ -267,7 +265,11 @@ func uploadFile(r *http.Request, formField, destinationFilePath string) error {
 }
 
 func dcUploadTopo(w http.ResponseWriter, r *http.Request) {
-	user := mux.Vars(r)["user"]
+	user := getuser(r)
+	if user == "" {
+		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+		return
+	}
 	datacenterName := mux.Vars(r)["dcname"]
 
 	// Prepare Folder for next topo
@@ -331,7 +333,6 @@ func uploadxdcr(w http.ResponseWriter, r *http.Request) {
 	user := getuser(r)
 	if user == "" {
 		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		log(r, "no user")
 		return
 	}
 
@@ -442,6 +443,11 @@ func createXDCRFiles(user, defFiles, dir string, datacenters []Datacenter) error
 
 func xdcrPage(w http.ResponseWriter, r *http.Request) {
 	user := getuser(r)
+	if user == "" {
+		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
+		return
+	}
+
 	r.ParseForm()
 	version := r.Form.Get("v")
 
@@ -466,7 +472,6 @@ func experimentTopo(w http.ResponseWriter, r *http.Request) {
 	user := getuser(r)
 	if user == "" {
 		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		log(r, "no user")
 		return
 	}
 
@@ -541,7 +546,6 @@ func experimentTopopush(w http.ResponseWriter, r *http.Request) {
 	user := getuser(r)
 	if user == "" {
 		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		log(r, "no user")
 		return
 	}
 
@@ -588,7 +592,6 @@ func experimentXDCR(w http.ResponseWriter, r *http.Request) {
 	user := getuser(r)
 	if user == "" {
 		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		log(r, "no user")
 		return
 	}
 
@@ -682,7 +685,6 @@ func experimentXDCRsave(w http.ResponseWriter, r *http.Request) {
 	user := getuser(r)
 	if user == "" {
 		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		log(r, "no user")
 		return
 	}
 
