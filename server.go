@@ -181,12 +181,7 @@ func deleteUserPage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/users", http.StatusTemporaryRedirect)
 }
 
-func deleteXDCRPage(w http.ResponseWriter, r *http.Request) {
-	user := getuser(r)
-	if user == "" {
-		http.Redirect(w, r, "/main", http.StatusTemporaryRedirect)
-		return
-	}
+func deleteXDCRPage(w http.ResponseWriter, r *http.Request, user string) {
 	version := mux.Vars(r)["version"]
 	os.RemoveAll(filepath.Join(xdcrDirectory(user), version))
 	http.Redirect(w, r, "/xdcr", http.StatusTemporaryRedirect)
