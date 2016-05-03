@@ -31,6 +31,7 @@ func main() {
 			templates = template.Must(template.New("abc").Funcs(fns).ParseGlob("public/template/*.html"))
 			r := mux.NewRouter()
 			r.HandleFunc("/main", mainPage)
+			r.HandleFunc("/", mainPage)
 			r.HandleFunc("/users", usersPage)
 			r.HandleFunc("/deleteuser/{user}", deleteUserPage)
 			r.HandleFunc("/topo", dcTopoPageForm)
