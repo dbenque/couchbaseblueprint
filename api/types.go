@@ -1,4 +1,4 @@
-package main
+package api
 
 import "strings"
 
@@ -16,14 +16,6 @@ type LabelMatcher interface {
 //EnvData simulate Environment file
 type EnvData struct {
 	Replacements Labels `yaml:"replacements" json:"replacements"`
-}
-
-//DCInjector is a struct to simulate operations to be done at Datacenter level
-type DCInjector struct {
-	//Topos key=topoFile[+envFile] value={list of datacenters on which the topology need to be deployed (one after the other)}
-	Topos map[string][]string
-	//XDCRs key=xdcrFile[+envFile] value={list of datacenters on which the rules need to be applied. Union of buckets of listed DC will be use to compute the XDCR instances}
-	XDCRs map[string][]string
 }
 
 //Datacenter named (unique) Datacenter instance.
@@ -196,3 +188,15 @@ func (a BucketByPath) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 //Less to implement sort.Sort
 func (a BucketByPath) Less(i, j int) bool { return strings.Compare(a[i].Path(), a[j].Path()) < 0 }
+
+func (c *Cluster) Path() string {
+	return c.Labels["Datacenter"] + "_" + c.Labels["ClusterGroup"] + "_" + c.Name + "_" + c.Instance
+}
+
+func (cg *ClusterGroup) Path() string {
+	return cg.Labels["Datacenter"] + "_" + cg.Name + "_" + cg.PeakToken
+}
+
+func (b *Bucket) Path() string {
+	return b.Labels["Datacenter"] + "_" + b.Labels["ClusterGroup"] + "_" + b.Labels["Cluster"] + "_" + b.Name
+}

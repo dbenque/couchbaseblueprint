@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"fmt"
@@ -53,16 +53,4 @@ func (dc *Datacenter) Dot(w io.Writer) {
 
 func (x *XDCR) Dot(w io.Writer) {
 	fmt.Fprintf(w, "%s -> %s [color=%s];\n", x.Source.Path(), x.Destination.Path(), x.Color)
-}
-
-func (c *Cluster) Path() string {
-	return c.Labels["Datacenter"] + "_" + c.Labels["ClusterGroup"] + "_" + c.Name + "_" + c.Instance
-}
-
-func (cg *ClusterGroup) Path() string {
-	return cg.Labels["Datacenter"] + "_" + cg.Name + "_" + cg.PeakToken
-}
-
-func (b *Bucket) Path() string {
-	return b.Labels["Datacenter"] + "_" + b.Labels["ClusterGroup"] + "_" + b.Labels["Cluster"] + "_" + b.Name
 }

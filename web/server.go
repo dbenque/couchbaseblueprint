@@ -1,7 +1,9 @@
-package main
+package web
 
 import (
 	"bytes"
+	"couchbasebp/api"
+	"couchbasebp/utils"
 	"fmt"
 	"html/template"
 	"io"
@@ -19,6 +21,32 @@ import (
 
 	"gopkg.in/yaml.v2"
 )
+
+func ServeHTTP() {
+	templates = template.Must(template.New("abc").Funcs(fns).ParseGlob("public/template/*.html"))
+	r := mux.NewRouter()
+	r.HandleFunc("/main", mainPage)
+	r.HandleFunc("/", mainPage)
+	r.HandleFunc("/users", UserHandler(usersPage))
+	r.HandleFunc("/deleteuser/{user}", deleteUserPage)
+	r.HandleFunc("/datacenters", UserHandler(datacentersPage))
+	r.HandleFunc("/deletedatacenter/{datacenterName}/{version}", UserHandler(deleteDatacenterPage))
+	r.HandleFunc("/deletedatacenter/{datacenterName}", UserHandler(deleteDatacenterPage))
+	r.HandleFunc("/datacenter/{datacenterName}", UserHandler(dcPage))
+	r.HandleFunc("/newdatacenter", UserHandler(newDatacenterPage))
+	r.HandleFunc("/uploadTopo/datacenter/{dcname}", UserHandler(dcUploadTopo))
+	r.HandleFunc("/xdcr", UserHandler(xdcrPage))
+	r.HandleFunc("/deletexdcr/{version}", UserHandler(deleteXDCRPage))
+	r.HandleFunc("/uploadxdcr", UserHandler(uploadxdcr))
+	r.HandleFunc("/experiment/topo", UserHandler(experimentTopo))
+	r.HandleFunc("/experiment/topopush", UserHandler(experimentTopopush))
+	r.HandleFunc("/experiment/xdcr", UserHandler(experimentXDCR))
+	r.HandleFunc("/experiment/xdcrsave", UserHandler(experimentXDCRsave))
+
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
+	http.Handle("/", r)
+	http.ListenAndServe(":1323", nil)
+}
 
 var templates *template.Template
 
@@ -77,10 +105,8 @@ func getuser(r *http.Request) string {
 	//check cookie
 	if c, err := r.Cookie("user"); err == nil {
 		user = c.Value
-		return user
 	}
-
-	return mux.Vars(r)["user"]
+	return user
 }
 
 func UserHandler(f func(http.ResponseWriter,
@@ -201,6 +227,8 @@ func deleteDatacenterPage(w http.ResponseWriter, r *http.Request, user string) {
 func newDatacenterPage(w http.ResponseWriter, r *http.Request, user string) {
 	r.ParseForm()
 	d := r.Form.Get("datacenterName")
+	var perm os.FileMode = 0777
+	os.MkdirAll(datacenterDirectory(user, d), perm)
 	http.Redirect(w, r, "/datacenter/"+d, http.StatusTemporaryRedirect)
 }
 
@@ -285,7 +313,7 @@ func dcUploadTopo(w http.ResponseWriter, r *http.Request, user string) {
 func createTopoFiles(defFiles, dir, datacenterName, version string) error {
 	// creation of VDatacenter topology target
 	var buf bytes.Buffer
-	errDc, s := TopoFromFile(defFiles, []Datacenter{NewDatacenter(datacenterName)}, &buf)
+	s, errDc := utils.TopoFromFile(defFiles, []api.Datacenter{api.NewDatacenter(datacenterName)}, &buf)
 	if errDc != nil {
 		fmt.Printf("%#v", errDc)
 		return errDc
@@ -293,7 +321,7 @@ func createTopoFiles(defFiles, dir, datacenterName, version string) error {
 	s[0].Version = version
 
 	//write json and yaml topo files
-	ToFile(s[0], filepath.Join(dir, "topo"))
+	utils.ToFile(s[0], filepath.Join(dir, "topo"))
 
 	//write dot topo file
 	ioutil.WriteFile(filepath.Join(dir, "topo.dot"), []byte(fmt.Sprintf("digraph { \n%s\n}\n", buf.String())), 0777)
@@ -355,10 +383,10 @@ func uploadxdcr(w http.ResponseWriter, r *http.Request, user string) {
 	}
 
 	//Read the datacenters
-	datacenters := []Datacenter{}
+	datacenters := []api.Datacenter{}
 	log(r, "Retrieving datacenters")
 	for _, dc := range dcFiles {
-		datacenter, err := DatacenterFromFile(dc)
+		datacenter, err := utils.DatacenterFromFile(dc)
 		if err != nil {
 			fmt.Printf("%#v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -381,10 +409,10 @@ func uploadxdcr(w http.ResponseWriter, r *http.Request, user string) {
 	http.Redirect(w, r, uri, http.StatusTemporaryRedirect)
 }
 
-func createXDCRFiles(user, defFiles, dir string, datacenters []Datacenter) error {
+func createXDCRFiles(user, defFiles, dir string, datacenters []api.Datacenter) error {
 	//Build the xdcrs
 	var buf bytes.Buffer
-	if errXDCR := XDCRFromFile(defFiles, datacenters, &buf); errXDCR != nil {
+	if errXDCR := utils.XDCRFromFile(defFiles, datacenters, &buf); errXDCR != nil {
 		fmt.Printf("%#v", errXDCR)
 		return errXDCR
 	}
@@ -478,7 +506,7 @@ func createTopoFilesFromStrings(topoStr, envStr, dirExp, datacenterName, version
 
 	defFiles := ""
 	// validate and write topodef
-	var topodef ClusterGroupDefBluePrint
+	var topodef api.ClusterGroupDefBluePrint
 	if err := yaml.Unmarshal([]byte(topoStr), &topodef); err != nil {
 		return err
 	}
@@ -488,7 +516,7 @@ func createTopoFilesFromStrings(topoStr, envStr, dirExp, datacenterName, version
 	// validate and write environment
 	environment := len(envStr) > 0
 	if environment {
-		var envdata EnvData
+		var envdata api.EnvData
 		if err := yaml.Unmarshal([]byte(envStr), &envdata); err != nil {
 			return err
 		}
@@ -578,7 +606,7 @@ func experimentXDCR(w http.ResponseWriter, r *http.Request, user string) {
 
 	defFiles := ""
 	// validate and write topodef
-	var xdcrdef XDCRDefBluePrint
+	var xdcrdef api.XDCRDefBluePrint
 	if err := yaml.Unmarshal([]byte(data.XDCR), &xdcrdef); err != nil {
 		data.Error = err.Error()
 		renderTemplate(w, "expXdcr", data)
@@ -591,7 +619,7 @@ func experimentXDCR(w http.ResponseWriter, r *http.Request, user string) {
 	// validate and write environment
 	environment := len(data.Env) > 0
 	if environment {
-		var envdata EnvData
+		var envdata api.EnvData
 		if err := yaml.Unmarshal([]byte(data.Env), &envdata); err != nil {
 			data.Error = err.Error()
 			renderTemplate(w, "expXdcr", data)
@@ -603,12 +631,12 @@ func experimentXDCR(w http.ResponseWriter, r *http.Request, user string) {
 	}
 
 	//Load datacenter
-	datacenters := []Datacenter{}
+	datacenters := []api.Datacenter{}
 	log(r, "Retrieving datacenters")
 	listDatacenterNames := r.Form["datacenters"]
 	for _, dcname := range listDatacenterNames {
 		version := r.Form.Get(dcname + "_version")
-		datacenter, err := DatacenterFromFile(filepath.Join(datacenterDirectory(user, dcname), "v"+version, "topo.yaml"))
+		datacenter, err := utils.DatacenterFromFile(filepath.Join(datacenterDirectory(user, dcname), "v"+version, "topo.yaml"))
 		if err != nil {
 			fmt.Printf("%#v", err)
 			data.Error = err.Error()
@@ -647,139 +675,4 @@ func experimentXDCRsave(w http.ResponseWriter, r *http.Request, user string) {
 		}
 	}
 	http.Redirect(w, r, "/xdcr?v="+version[1:], http.StatusTemporaryRedirect)
-}
-
-func copyFile(src, dst string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-	out, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-	_, err = io.Copy(out, in)
-	cerr := out.Close()
-	if err != nil {
-		return err
-	}
-	return cerr
-}
-
-func prepareNextVersion(baseDir string) (string, string, error) {
-	var perm os.FileMode = 0777
-	dirbase := baseDir
-	os.MkdirAll(dirbase, perm)
-	version, err := nextVersion(dirbase)
-	if err != nil {
-		fmt.Printf("%#v", err)
-		return "", "", err
-	}
-	dir := filepath.Join(dirbase, version)
-	os.MkdirAll(dir, perm)
-	return dir, version, nil
-}
-
-func datacenterURI(user, datacenterName string) string {
-	return filepath.Join("/data", user, "dc", datacenterName)
-}
-
-func xdcrURI(user string) string {
-	return filepath.Join("/data", user, "xdcr")
-}
-
-func experimentURI(user string) string {
-	return filepath.Join("/data", user, "experiment")
-}
-
-func userDirectory(user string) string {
-	return filepath.Join("public", "data", user)
-}
-
-func datacenterDirectory(user, datacenterName string) string {
-	return filepath.Join(userDirectory(user), "dc", datacenterName)
-}
-
-func xdcrDirectory(user string) string {
-	return filepath.Join(userDirectory(user), "xdcr")
-}
-
-func experimentDirectory(user string) string {
-	return filepath.Join(userDirectory(user), "experiment")
-}
-
-func listUsers() []string {
-	users := []string{}
-	files, _ := ioutil.ReadDir(filepath.Join("public", "data"))
-	for _, file := range files {
-		users = append(users, file.Name())
-	}
-	return users
-}
-func listXDCR(user string) []int {
-	xdcr, _ := listVersions(xdcrDirectory(user))
-	return xdcr
-}
-
-func listDatacenter(user string) []string {
-	dcs := []string{}
-	files, _ := ioutil.ReadDir(filepath.Join(userDirectory(user), "dc"))
-	for _, file := range files {
-		dcs = append(dcs, file.Name())
-	}
-	return dcs
-}
-
-func listVersions(folderPath string) ([]int, error) {
-	versions := []int{}
-	files, err := ioutil.ReadDir(folderPath)
-	if err != nil {
-		return nil, err
-	}
-	max := 0
-	for _, file := range files {
-		if file.Name()[0] == 'v' && len(file.Name()) > 1 {
-			i, err := strconv.Atoi(file.Name()[1:])
-			if err == nil && i > max {
-				versions = append(versions, i)
-			}
-		}
-	}
-	return versions, nil
-}
-func latestVersionInt(folderPath string) (int, error) {
-	max := 0
-	if l, err := listVersions(folderPath); err == nil {
-		for _, i := range l {
-			if err == nil && i > max {
-				max = i
-			}
-		}
-	}
-	if max == 0 {
-		return 0, fmt.Errorf("No version found in folderPath")
-	}
-	return max, nil
-}
-
-func nextVersion(folderPath string) (string, error) {
-	v, _ := latestVersionInt(folderPath)
-	v++
-	return fmt.Sprintf("v%d", v), nil
-}
-func latestVersion(folderPath string) (string, error) {
-	v, _ := latestVersionInt(folderPath)
-	return fmt.Sprintf("v%d", v), nil
-}
-
-func log(r *http.Request, f string, a ...interface{}) {
-	t := time.Now()
-	u := getuser(r)
-	if a != nil {
-		fmt.Printf(fmt.Sprintf("%s %s: %s\n", t.Format(time.RFC3339), u, f), a...)
-	} else {
-		fmt.Printf("%s %s: %s\n", t.Format(time.RFC3339), u, f)
-	}
 }

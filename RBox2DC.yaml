@@ -1,4 +1,0 @@
-topos:
-  RBox2/couchbase.yaml: ["DC1","DC2"]
-xdcrs:
-  RBox2/XDCR.yaml: ["DC1","DC2"]
