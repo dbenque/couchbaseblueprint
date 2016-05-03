@@ -50,7 +50,7 @@ func NewClusters(lb Labels, def ClusterDef) []Cluster {
 			bdef.Labels["Cluster"] = c.Name + "_" + i
 			bdef.Labels["Datacenter"], _ = lb["Datacenter"]
 			bdef.Labels["ClusterGroup"], _ = lb["ClusterGroup"]
-
+			bdef.Labels["name"] = bdef.Name
 			c.Buckets = append(c.Buckets, bdef)
 		}
 		results = append(results, c)

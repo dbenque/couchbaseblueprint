@@ -41,6 +41,12 @@
 </form>
 
 {{ if (and (len (imgExpTopo .User)) (len .Topo))}}
+<h1>Definition</h1>
+<a href='/data/{{.User}}/experiment/topodef.yaml'>topodef.yaml</a><br>
+<a href='/data/{{.User}}/experiment/topoenv.yaml'>topoenv.yaml</a><br>
+<h1>Instances</h1>
+<a href='/data/{{.User}}/experiment/topo.yaml'>topo.yaml</a><br>
+<br>
 <img src="{{ (imgExpTopo .User) }}">
 
 {{ if (len (listDatacenter .User))}}
