@@ -1,0 +1,27 @@
+{{define "mainPage"}}
+{{template "head" .}}
+<h1>Welcome to Couchbase Blueprint simulator</h1>
+The goal of this website is to allow you to play with Couchbase blueprint definition, the the topology generated. Also it will allow you to define some XDCR rules and visualize the result on top of a topology previously defined.
+<h1>How to?</h1>
+<h2>User</h2>
+On the top right corner of the site enter your user name.Then click <button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-hand-left" aria-hidden="true"></span></button> button. This will create a space for you.<br>
+We encourage you to use you classic unix username to avoid collision with other users.<br>
+There is not security or authenticate, if you type the username of someone else you will enter is space. This is a tool for simulation, sharing and collaboration is encouraged. So be fare don't delete anything in someone else space.<br>
+<h2>Experiements/Topology</h2>
+The best way to start is to play with topology experiments. Click on the Experiments menu and select Topology.<br>
+There you will find a space where you can inject Topology definition and associated Environment. Some examples are provided as links.<br>
+You can submit your experiments. In case of error the page will tell you as much as it can to help you in fixing. The syntax use is YAML and the structure are available in the examples.<br>
+If you submit a correct content, then the picture of the generated topology will appear on the page.<br>
+You can copy and save you YAML definitions to your local filesystem, or you can inject it on a Datacenter that you would have previously defined. (see next section)<br>
+<h2>Experiements/XDCR</h2>
+--- tbd ---
+<h2>Datacenters</h2>
+In the 'Datacenter' pages you can create several datacenters.<br>
+On each datacenter you can import YAML file defining the topoology. Instead of importing local files, it is recommended to inject definitions from the Experiments/Topology section (better error handling).<br>
+The website will collect and store you different versions.<br>
+ <h2>XDCR</h2>
+ In the 'XDCR' pages you can defined the XDCR Rules and inject them on a given datacenter.<br>
+ The rules are always injected on the latest definition of the datacenters selected.<br>
+ Here also the system keeps for you the different versions that you have created.<br>
+{{template "foot" .}}
+{{end}}

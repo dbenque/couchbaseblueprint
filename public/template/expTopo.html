@@ -1,10 +1,13 @@
 {{define "expTopo"}}
 {{template "head" .}}
 
+<h1>Topology - Experiment</h1>
+
     {{ if (len .Error) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
   <span class="sr-only">Error:</span>
+    </div>
   {{ .Error }}
 {{end}}
 

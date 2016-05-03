@@ -1,4 +1,85 @@
 {{define "expXdcr"}}
 {{template "head" .}}
+
+<h1>XDCR - Experiment</h1>
+
+ {{ if (len .Error) }}
+    <div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+    </div>
+  {{ .Error }}
+  {{ end}}
+
+<form action="#" method="post">
+  <div class="form-group">
+    <table>
+      <tr><td>
+    <label for="xdcrArea">Topology Experiments (yaml) <a href="/examples/xdcrdef.yaml" target="_blank">example</a></label>
+    {{ if (len .ErrXDCR) }}
+    <div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+  {{ .ErrXDCR }}
+    </div>
+    {{ end }}    
+    <textarea class="form-control" cols="80" rows="25" id="xdcrArea" name="xdcrArea">{{.XDCR}}</textarea>
+    </td>
+    <td>&nbsp;&nbsp;</td>
+    <td>
+  <label for="envArea">Environment Experiments (yaml) <a href="/examples/xdcrenv.yaml" target="_blank">example</a></label>
+    {{ if (len .ErrEnv) }}
+    <div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+  {{ .ErrEnv }}
+    </div>
+    {{ end }}
+    <textarea class="form-control" cols="40" rows="25" id="envArea" name="envArea">{{.Env}}</textarea>
+  </div>
+  </td></tr>
+  <tr><td>&nbsp;</td></tr>
+  </table>
+
+{{ if (len (listDatacenter .User))}}
+    <div class="form-group">
+       <table>
+           <th>Datacenter</th>
+           <th>&nbsp&nbsp</th>
+           <th>Version</th>
+    {{ $user:= .User }}
+    {{ range (listDatacenter .User) }}
+    <tr>
+    <td><div class="checkbox"><input type="checkbox" name="datacenters" value="{{.}}">{{.}}</input></div></td>
+    <td></td>
+    <td><input type="text" name="{{.}}_version" value="{{ lastVersionDC $user . }}" size="5"/></td>
+    </tr>
+    {{ end }} 
+    </table>   
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{{ end }}
+
+{{ if (and (len (imgExpXDCR .User)) (len .XDCR))}}
+<h1>Definition</h1>
+<a href='/data/{{.User}}/experiment/xdcrdef.yaml'>xdcrdef.yaml</a><br>
+<a href='/data/{{.User}}/experiment/xdcrenv.yaml'>xdrcenv.yaml</a><br>
+<!-- <h1>Datacenters</h1>
+{{ range .DatacenterLinks }}
+<a href="{{ .Uri }}">{{ .Text }}</a><br>
+{{ end }} -->
+<h1>Result</h1>
+<img src="{{ (imgExpXDCR .User) }}">
+
+<h1>Save XDCR</h1>
+<form action="/experiment/xdcrsave" method="post">
+  <button type="submit" class="btn btn-primary">Save</button>
+</form>
+{{ end }}
+
+    
+
+
 {{template "foot" .}}
 {{end}}

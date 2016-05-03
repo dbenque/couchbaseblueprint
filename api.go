@@ -29,6 +29,7 @@ type DCInjector struct {
 //Datacenter named (unique) Datacenter instance.
 type Datacenter struct {
 	Name          string
+	Version       string
 	ClusterGroups []ClusterGroup
 }
 

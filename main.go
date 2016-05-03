@@ -48,6 +48,7 @@ func main() {
 			r.HandleFunc("/experiment/topo", experimentTopo)
 			r.HandleFunc("/experiment/topopush", experimentTopopush)
 			r.HandleFunc("/experiment/xdcr", experimentXDCR)
+			r.HandleFunc("/experiment/xdcrsave", experimentXDCRsave)
 
 			r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 			http.Handle("/", r)

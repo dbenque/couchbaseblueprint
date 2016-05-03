@@ -1,0 +1,69 @@
+# The following caracters are separator
+# that should never be used in keyword and values
+# tab "    ", space " ", dash "-", dot "." , "[]", "()"
+#
+# If you need separator use "_"
+#
+xdcrdefs:
+#
+# --- custom rule ---
+# custom rule builds create link from each source to each destination
+- rule: custom
+  bidirectional: true
+  source:
+    Type: A    
+  #optional
+  sourceExclude:
+    SubType: aa
+  destination:
+    Type: B
+  #optional
+  DestinationExclude:
+    SubType: bb
+  args: []
+  #optional
+  argsXCluster: []
+  #optional
+  argsXClusterGroup: []
+  #optional
+  ArgsXDatacenter: []
+  color: red
+- rule: custom
+  bidirectional: false
+  source:
+    name: BucketNameSource    
+  destination:
+    name: BucketNamedestination
+  # you can group (kind of scope definition, see documentation) your xdrc definition by any label
+  # note that some label are automatically generated for you (name,Cluster,ClusterGroup,Datacenter)  
+  groupOn:
+    - ClusterGroup
+    - Datacenter
+  args: []
+  color: red
+#
+# --- tree/uptree rule ---
+# tree/uptree rules order the buckets thanks to the 'Level' label.
+# no destination require, the source is use to define the pool of bucked to be taken into account by the uptree/uptree algorithm
+# not all optional parameters are displayed here, see previous example 
+- rule: uptree
+  bidirectional: false
+  source:
+    Role: Stat
+  groupOn:
+    - ClusterGroup
+    - Datacenter
+  args: []
+  color: green
+#
+# --- ring rule ---
+# ring rule builds a ring on to of the pull of buckets defined by the source. Proximity Cluster-ClusterGroup-Datacenter is taken into account.
+# no destination require, the source is use to define the pool of buckets to be taken into account by the uptree/uptree algorithm
+# not all optional parameters are displayed here, see previous example
+- rule: ring
+  bidirectional: false
+  source:
+    name: Booking
+    Status: Active
+  args: []
+  color: blue

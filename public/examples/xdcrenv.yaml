@@ -1,0 +1,9 @@
+# The following caracters are separator
+# that should never be used in keyword and values
+# tab "    ", space " ", dash "-", dot "." , "[]", "()"
+#
+# If you need separator use "_"
+#
+replacements:
+ aa: mySubType
+
