@@ -18,10 +18,10 @@
 <h1>Definition</h1>
 <a href='/data/{{.User}}/xdcr/v{{.Version}}/xdcrdef.yaml'>xdcrdef.yaml</a><br>
 <a href='/data/{{.User}}/xdcr/v{{.Version}}/xdcrenv.yaml'>xdcrenv.yaml</a><br>
-<!-- <h1>Datacenters</h1>
+<h1>Datacenters</h1>
 {{ range .DatacenterLinks }}
 <a href="{{ .Uri }}">{{ .Text }}</a><br>
-{{ end }} -->
+{{ end }}
 <h1>Delete</h1>
 <button onclick="location.href='/deletexdcr/v{{.Version}}';" type="button" class="btn btn-danger">delete version {{.Version}}</button>
 {{ end }}

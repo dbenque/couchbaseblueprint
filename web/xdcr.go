@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -131,6 +132,7 @@ func createXDCRFiles(user, defFiles, dir string, datacenters []api.Datacenter) e
 func xdcrPage(w http.ResponseWriter, r *http.Request, user string) {
 	r.ParseForm()
 	version := r.Form.Get("v")
+	vInt, _ := strconv.Atoi(version)
 
 	data := struct {
 		User            string
@@ -141,7 +143,7 @@ func xdcrPage(w http.ResponseWriter, r *http.Request, user string) {
 		User:            user,
 		Versions:        []int{},
 		Version:         version,
-		DatacenterLinks: []linkdc{},
+		DatacenterLinks: xdcrDatacenterLinksForVersion(user, vInt),
 	}
 	renderTemplate(w, "xdcr", data)
 }
@@ -153,11 +155,6 @@ func experimentXDCR(w http.ResponseWriter, r *http.Request, user string) {
 	var perm os.FileMode = 0777
 	dirExp := experimentDirectory(user)
 	os.MkdirAll(dirExp, perm)
-
-	//clean previous input
-	for _, f := range xdcrFileList {
-		os.Remove(filepath.Join(dirExp, f))
-	}
 
 	r.ParseForm()
 
@@ -176,7 +173,12 @@ func experimentXDCR(w http.ResponseWriter, r *http.Request, user string) {
 		Env:             r.Form.Get("envArea"),
 		ErrEnv:          "",
 		Error:           "",
-		DatacenterLinks: []linkdc{},
+		DatacenterLinks: xdcrDatacenterLinks(user, experimentDirectory(user)),
+	}
+
+	//clean previous input
+	for _, f := range xdcrFileList {
+		os.Remove(filepath.Join(dirExp, f))
 	}
 
 	defFiles := ""

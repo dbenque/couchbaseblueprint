@@ -6,9 +6,9 @@
  {{ if (len .Error) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-  <span class="sr-only">Error:</span>
-    </div>
-  {{ .Error }}
+  <span class="sr-only"></span>
+  Error:{{ .Error }}
+  </div>  
   {{ end}}
 
 <form action="#" method="post">
@@ -19,8 +19,8 @@
     {{ if (len .ErrXDCR) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-  <span class="sr-only">Error:</span>
-  {{ .ErrXDCR }}
+  <span class="sr-only"></span>
+  Error:{{ .ErrXDCR }}
     </div>
     {{ end }}    
     <textarea class="form-control" cols="80" rows="25" id="xdcrArea" name="xdcrArea">{{.XDCR}}</textarea>
@@ -31,8 +31,8 @@
     {{ if (len .ErrEnv) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-  <span class="sr-only">Error:</span>
-  {{ .ErrEnv }}
+  <span class="sr-only"></span>
+  Error:{{ .ErrEnv }}
     </div>
     {{ end }}
     <textarea class="form-control" cols="40" rows="25" id="envArea" name="envArea">{{.Env}}</textarea>
@@ -65,10 +65,10 @@
 <h1>Definition</h1>
 <a href='/data/{{.User}}/experiment/xdcrdef.yaml'>xdcrdef.yaml</a><br>
 <a href='/data/{{.User}}/experiment/xdcrenv.yaml'>xdrcenv.yaml</a><br>
-<!-- <h1>Datacenters</h1>
+<h1>Datacenters</h1>
 {{ range .DatacenterLinks }}
 <a href="{{ .Uri }}">{{ .Text }}</a><br>
-{{ end }} -->
+{{ end }}
 <h1>Result</h1>
 <img src="{{ (imgExpXDCR .User) }}">
 

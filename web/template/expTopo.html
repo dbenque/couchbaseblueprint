@@ -6,9 +6,9 @@
     {{ if (len .Error) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-  <span class="sr-only">Error:</span>
+  <span class="sr-only"></span>
+  Error:{{ .Error }}
     </div>
-  {{ .Error }}
 {{end}}
 
 <form action="#" method="post">
@@ -19,8 +19,8 @@
     {{ if (len .ErrTopo) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-  <span class="sr-only">Error:</span>
-  {{ .ErrTopo }}
+  <span class="sr-only"></span>
+  Error:{{ .ErrTopo }}
     </div>
     {{ end }}    
     <textarea class="form-control" cols="80" rows="25" id="topoArea" name="topoArea">{{.Topo}}</textarea>
@@ -31,8 +31,8 @@
     {{ if (len .ErrEnv) }}
     <div class="alert alert-danger" role="alert">
   <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-  <span class="sr-only">Error:</span>
-  {{ .ErrEnv }}
+  <span class="sr-only"></span>
+  Error:{{ .ErrEnv }}
     </div>
     {{ end }}
     <textarea class="form-control" cols="40" rows="25" id="envArea" name="envArea">{{.Env}}</textarea>

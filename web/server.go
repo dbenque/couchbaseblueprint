@@ -1,16 +1,12 @@
 package web
 
 import (
-	"fmt"
 	"html/template"
-	"io/ioutil"
-	"path/filepath"
 	"time"
 
 	"github.com/gorilla/mux"
 
 	"net/http"
-	"strings"
 )
 
 func ServeHTTP() {
@@ -37,30 +33,6 @@ func ServeHTTP() {
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 	http.Handle("/", r)
 	http.ListenAndServe(":1323", nil)
-}
-
-type linkdc struct {
-	Uri  string
-	Text string
-}
-
-func xdcrDatacenterLinks(user, pathToDatacentersTxt string) []linkdc {
-
-	links := []linkdc{}
-	b, err := ioutil.ReadFile(pathToDatacentersTxt)
-	if err != nil {
-		fmt.Printf("Error:%#v", err)
-		return links
-	}
-
-	for _, dctxt := range strings.Split(string(b), ",") {
-		token := strings.Split(dctxt, ":")
-		uri := filepath.Join("/topo", user, "datacenter", token[0]) + "v=?" + token[1]
-		str := token[0] + " " + token[1]
-		links = append(links, linkdc{uri, str})
-	}
-
-	return links
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {

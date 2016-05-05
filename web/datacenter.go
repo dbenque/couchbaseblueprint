@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 
@@ -251,4 +252,31 @@ func experimentTopopush(w http.ResponseWriter, r *http.Request, user string) {
 		return
 	}
 	http.Redirect(w, r, "/datacenters", http.StatusTemporaryRedirect)
+}
+
+type linkdc struct {
+	Uri  string
+	Text string
+}
+
+func xdcrDatacenterLinks(user, directory string) []linkdc {
+	pathToDatacentersTxt := filepath.Join(directory, "datacenters.txt")
+	links := []linkdc{}
+	b, err := ioutil.ReadFile(pathToDatacentersTxt)
+	if err != nil {
+		fmt.Printf("Error:%#v", err)
+		return links
+	}
+	for _, dctxt := range strings.Split(string(b), ",") {
+		token := strings.Split(dctxt, ":")
+		uri := filepath.Join("/datacenter", token[0]+"?v="+token[1])
+		str := token[0] + " " + token[1]
+		links = append(links, linkdc{uri, str})
+	}
+	return links
+}
+
+func xdcrDatacenterLinksForVersion(user string, xdcrVersion int) []linkdc {
+	path := filepath.Join(xdcrDirectory(user), fmt.Sprintf("v%d", xdcrVersion))
+	return xdcrDatacenterLinks(user, path)
 }
