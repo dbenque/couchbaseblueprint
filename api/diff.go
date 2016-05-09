@@ -16,20 +16,17 @@ type diffComposition struct {
 	New      []interface{}
 }
 
-func (d *diffComposition) Empty() bool {
-	return len(d.Modified) > 0 || len(d.Deleted) > 0 || len(d.New) > 0
-}
-
 func (d *diff) Empty() bool {
-	return len(d.Composition) > 0 || len(d.Param) > 0
+	return len(d.Composition) == 0 && len(d.Param) == 0
 }
 
 type diff struct {
+	Path        string
 	Param       map[string]diffValues
 	Composition map[string]diffComposition
 }
 
-func NewDiffComposition() diffComposition {
+func newDiffComposition() diffComposition {
 	return diffComposition{[]diff{}, []interface{}{}, []interface{}{}}
 }
 
@@ -42,7 +39,7 @@ func checkDiff(current, proposed PathIdentifier) (*diff, error) {
 		return nil, fmt.Errorf("diff on bucket not under same path")
 	}
 
-	d := diff{Param: map[string]diffValues{}, Composition: map[string]diffComposition{}}
+	d := diff{Path: current.Path(), Param: map[string]diffValues{}, Composition: map[string]diffComposition{}}
 
 	vc := reflect.ValueOf(current)
 	vp := reflect.ValueOf(proposed)
@@ -53,14 +50,15 @@ func checkDiff(current, proposed PathIdentifier) (*diff, error) {
 
 		tag := vc.Type().Field(i).Tag
 		fieldName := vc.Type().Field(i).Name
-		switch tag {
+
+		switch tag.Get("diff") {
 		case "value":
 			if !reflect.DeepEqual(vcurrent, vproposed) {
 				d.Param[fieldName] = diffValues{Current: vcurrent, Proposed: vproposed}
 			}
 		case "composition":
 			same, added, deleted, err := checkDiffInComposition(vcurrent, vproposed)
-			d.Composition[fieldName] = NewDiffComposition()
+			d.Composition[fieldName] = newDiffComposition()
 			if err != nil {
 				return nil, err
 			}
@@ -75,11 +73,13 @@ func checkDiff(current, proposed PathIdentifier) (*diff, error) {
 				d.Composition[fieldName] = dc
 			}
 			for _, n := range same {
+				fmt.Printf("Checking compo under same path %s\n", n[0].Path())
 				md, err := checkDiff(n[0], n[1])
 				if err != nil {
 					return nil, err
 				}
 				if !md.Empty() {
+					fmt.Println("Diff detected in composition")
 					dc := d.Composition[fieldName]
 					dc.Modified = append(dc.Modified, *md)
 					d.Composition[fieldName] = dc

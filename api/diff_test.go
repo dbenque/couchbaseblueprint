@@ -1,6 +1,11 @@
 package api
 
-import "testing"
+import (
+	"fmt"
+	"reflect"
+	"sort"
+	"testing"
+)
 
 type PathI string
 
@@ -8,8 +13,155 @@ func (p PathI) Path() string {
 	return string(p)
 }
 
+type myStruct struct {
+	P  string
+	F1 int `diff:"value"`
+	F2 int
+	F3 []myStruct `diff:"composition"`
+	F4 []myStruct
+}
+
+func (p myStruct) Path() string {
+	return string(p.P)
+}
+
+func diffReport(d *diff, report []string) []string {
+	for k, v := range d.Param {
+		line := fmt.Sprintf("%s.%s:%v->%v", d.Path, k, v.Current, v.Proposed)
+		report = append(report, line)
+	}
+
+	for k, v := range d.Composition {
+		if v.New != nil {
+			for _, vv := range v.New {
+				p := vv.(PathIdentifier)
+				line := fmt.Sprintf("%s.%s:New=%s", d.Path, k, p.Path())
+				report = append(report, line)
+			}
+		}
+		if v.Deleted != nil {
+			for _, vv := range v.Deleted {
+				p := vv.(PathIdentifier)
+				line := fmt.Sprintf("%s.%s:Deleted=%s", d.Path, k, p.Path())
+				report = append(report, line)
+			}
+		}
+		if v.Modified != nil {
+			for _, dd := range v.Modified {
+				report = diffReport(&dd, report)
+			}
+		}
+	}
+
+	return report
+}
+
 func TestCheckDiff(t *testing.T) {
-	t.Errorf("Not Implemented")
+
+	testcase := []struct {
+		name     string
+		current  myStruct
+		proposed myStruct
+		report   []string
+	}{
+		{
+			name:     "no_changes_f4nil",
+			current:  myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{}},
+			proposed: myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{}},
+			report:   []string{},
+		},
+		{
+			name:     "no_changes_f3f4nil",
+			current:  myStruct{P: "A", F1: 1, F2: 2},
+			proposed: myStruct{P: "A", F1: 1, F2: 2},
+			report:   []string{},
+		},
+		{
+			name:     "f1change_f4nil",
+			current:  myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{}},
+			proposed: myStruct{P: "A", F1: 10, F2: 2, F3: []myStruct{}},
+			report:   []string{"A.F1:1->10"},
+		},
+		{
+			name:     "f1f2change",
+			current:  myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{}},
+			proposed: myStruct{P: "A", F1: 10, F2: 20, F3: []myStruct{}},
+			report:   []string{"A.F1:1->10"},
+		},
+		{
+			name:     "f3nilandnotnilchange",
+			current:  myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{}},
+			proposed: myStruct{P: "A", F1: 1, F2: 2},
+			report:   []string{},
+		},
+		{
+			name:     "f3New_x2_f4nil",
+			current:  myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{}},
+			proposed: myStruct{P: "A", F1: 1, F2: 2},
+			report:   []string{},
+		},
+		{
+			name:    "f3New_x2",
+			current: myStruct{P: "A", F1: 1, F2: 2},
+			proposed: myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{
+				{P: "B1", F1: 1, F2: 2}, {P: "B2", F1: 10, F2: 20},
+			}},
+			report: []string{"A.F3:New=B1", "A.F3:New=B2"},
+		},
+		{
+			name: "f3NewAndDelete",
+			current: myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{
+				{P: "B1", F1: 1, F2: 2},
+			}},
+			proposed: myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{
+				{P: "B2", F1: 10, F2: 20},
+			}},
+			report: []string{"A.F3:Deleted=B1", "A.F3:New=B2"},
+		},
+		{
+			name: "f3.B1_modified",
+			current: myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{
+				{P: "B1", F1: 1, F2: 2}, {P: "B2", F1: 10, F2: 20},
+			}},
+			proposed: myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{
+				{P: "B1", F1: 3, F2: 3}, {P: "B2", F1: 10, F2: 20},
+			}},
+			report: []string{"B1.F1:1->3"},
+		},
+		{
+			name: "doubleCompoAllTypeOfChange",
+			current: myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{
+				{P: "B1", F1: 1, F2: 2, F3: []myStruct{
+					{P: "C1", F1: 3, F2: 3}, {P: "C2", F1: 10, F2: 20},
+				},
+				},
+			}},
+			proposed: myStruct{P: "A", F1: 1, F2: 2, F3: []myStruct{
+				{P: "B1", F1: 5, F2: 2, F3: []myStruct{
+					{P: "C3", F1: 0, F2: 0}, {P: "C2", F1: 100, F2: 20},
+				},
+				},
+			}},
+			report: []string{"B1.F1:1->5 B1.F3:Deleted=C1 B1.F3:New=C3 C2.F1:10->100"},
+		},
+	}
+
+	for _, test := range testcase {
+		fmt.Printf("Test %s\n", test.name)
+		d, err := checkDiff(test.current, test.proposed)
+		if err != nil {
+			t.Errorf("Test %s failed with error %v", test.name, err)
+			continue
+		}
+		report := []string{}
+		report = diffReport(d, report)
+		sort.Strings(report)
+		sort.Strings(test.report)
+		if !reflect.DeepEqual(report, test.report) {
+			t.Errorf("Test %s did not give expected report:\nExpected:%v\nGot:%v\n", test.name, test.report, report)
+			continue
+		}
+	}
 }
 
 func TestCheckDiffInComposition(t *testing.T) {
