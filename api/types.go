@@ -22,7 +22,7 @@ type EnvData struct {
 type Datacenter struct {
 	Name          string
 	Version       string
-	ClusterGroups []ClusterGroup
+	ClusterGroups []ClusterGroup `diff:"composition"`
 }
 
 //AddClusterGroup copy clustergroup instances in the Datacenter
@@ -30,7 +30,7 @@ func (dc *Datacenter) AddClusterGroup(cg []ClusterGroup) {
 	dc.ClusterGroups = append(dc.ClusterGroups, cg...)
 }
 
-//AddClusterGroup create clustergroup instances in the Datacenter, based on the definition
+//AddClusterGroupDef create clustergroup instances in the Datacenter, based on the definition
 func (dc *Datacenter) AddClusterGroupDef(cgdef ClusterGroupDef) {
 	cg := NewClusterGroups(dc.Name, cgdef)
 	dc.ClusterGroups = append(dc.ClusterGroups, cg...)
@@ -66,37 +66,38 @@ type ClusterGroupDef struct {
 type ClusterGroup struct {
 	Name      string
 	PeakToken string
-	Labels    Labels
-	Clusters  []Cluster
+	Labels    Labels    `diff:"value"`
+	Clusters  []Cluster `diff:"composition"`
 }
 
 //ClusterDef definition of the topology at Cluster level.
 type ClusterDef struct {
 	Name      string   `yaml:"name" json:"name"`
 	Instances []string `yaml:"instances" json:"instances"`
-	Labels    Labels   `yaml:"labels,omitempty" json:"labels,omitempty"`
-	Buckets   []Bucket `yaml:"buckets" json:"buckets"`
+	Labels    Labels   `yaml:"labels,omitempty" json:"labels,omitempty" diff:"value"`
+	Buckets   []Bucket `yaml:"buckets" json:"buckets" diff:"composition"`
 }
 
 //Cluster Cluster instance
 type Cluster struct {
 	Name     string
 	Instance string
-	Labels   Labels
-	Buckets  []Bucket
+	Labels   Labels   `diff:"value"`
+	Buckets  []Bucket `diff:"composition"`
 }
 
 //Bucket instance
 type Bucket struct {
 	Name              string `yaml:"name" json:"name"`
-	RamQuota          int    `yaml:"ramQuota" json:"ramQuota"`
-	CBReplicateNumber int    `yaml:"cbReplicatNumber" json:"cbReplicatNumber"`
-	Labels            Labels `yaml:"labels,omitempty" json:"labels,omitempty"`
+	RAMQuota          int    `yaml:"ramQuota" json:"ramQuota" diff:"value"`
+	CBReplicateNumber int    `yaml:"cbReplicatNumber" json:"cbReplicatNumber" diff:"value"`
+	Labels            Labels `yaml:"labels,omitempty" json:"labels,omitempty" diff:"value"`
 }
 
 //XDCRRule define type of rules for XDCR
 type XDCRRule string
 
+//Type of rules
 const (
 	UptreeRule XDCRRule = "uptree"
 	TreeRule   XDCRRule = "tree"
@@ -189,14 +190,22 @@ func (a BucketByPath) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 //Less to implement sort.Sort
 func (a BucketByPath) Less(i, j int) bool { return strings.Compare(a[i].Path(), a[j].Path()) < 0 }
 
+//PathIdentifier object implementing this interface are uniquely indentified by their path
+type PathIdentifier interface {
+	Path() string
+}
+
+//Path return the Path to that Cluster (identifier)
 func (c *Cluster) Path() string {
 	return c.Labels["Datacenter"] + "_" + c.Labels["ClusterGroup"] + "_" + c.Name + "_" + c.Instance
 }
 
+//Path return the Path to that ClusterGroup (identifier)
 func (cg *ClusterGroup) Path() string {
 	return cg.Labels["Datacenter"] + "_" + cg.Name + "_" + cg.PeakToken
 }
 
+//Path return the Path to that Bucket (identifier)
 func (b *Bucket) Path() string {
 	return b.Labels["Datacenter"] + "_" + b.Labels["ClusterGroup"] + "_" + b.Labels["Cluster"] + "_" + b.Name
 }
