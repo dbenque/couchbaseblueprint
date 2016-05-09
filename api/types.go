@@ -196,16 +196,16 @@ type PathIdentifier interface {
 }
 
 //Path return the Path to that Cluster (identifier)
-func (c *Cluster) Path() string {
+func (c Cluster) Path() string {
 	return c.Labels["Datacenter"] + "_" + c.Labels["ClusterGroup"] + "_" + c.Name + "_" + c.Instance
 }
 
 //Path return the Path to that ClusterGroup (identifier)
-func (cg *ClusterGroup) Path() string {
+func (cg ClusterGroup) Path() string {
 	return cg.Labels["Datacenter"] + "_" + cg.Name + "_" + cg.PeakToken
 }
 
 //Path return the Path to that Bucket (identifier)
-func (b *Bucket) Path() string {
+func (b Bucket) Path() string {
 	return b.Labels["Datacenter"] + "_" + b.Labels["ClusterGroup"] + "_" + b.Labels["Cluster"] + "_" + b.Name
 }

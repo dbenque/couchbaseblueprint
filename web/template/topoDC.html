@@ -20,6 +20,18 @@
 <button onclick="location.href='/deletedatacenter/{{.DatacenterName}}/v{{.Version}}';" type="button" class="btn btn-danger">delete version {{.Version}}</button>
 {{ end }}
 
+{{ if and .Versions (gt (len .Versions) 1)}}
+<h1>Diff</h1>
+<form action="#" method="post">
+<div class="form-group">
+<label for="current_version">Running Version</label>
+<input type="text" name="current_version" id="current_version" value="{{ lastVersionDC .User .DatacenterName }}" size="5"/>
+<label for="proposed_version">Proposed Version</label> 
+<input type="text" name="proposed_version" id="proposed_version" value="{{ lastVersionDC .User .DatacenterName }}" size="5"/>
+<button type="submit" class="btn btn-primary">View Diff</button>
+</div>
+</form>
+{{ end }}
 
 <h1>Upload new topology</h1>
 <form action="/uploadTopo/datacenter/{{.DatacenterName}}" method="post" enctype="multipart/form-data">
