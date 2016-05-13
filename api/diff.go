@@ -30,7 +30,7 @@ func newDiffComposition() diffComposition {
 	return diffComposition{[]diff{}, []interface{}{}, []interface{}{}}
 }
 
-func checkDiff(current, proposed PathIdentifier) (*diff, error) {
+func GetDiff(current, proposed PathIdentifier) (*diff, error) {
 	if current == nil || proposed == nil {
 		return nil, fmt.Errorf("Nil bucket as input")
 	}
@@ -74,7 +74,7 @@ func checkDiff(current, proposed PathIdentifier) (*diff, error) {
 			}
 			for _, n := range same {
 				fmt.Printf("Checking compo under same path %s\n", n[0].Path())
-				md, err := checkDiff(n[0], n[1])
+				md, err := GetDiff(n[0], n[1])
 				if err != nil {
 					return nil, err
 				}
@@ -139,4 +139,43 @@ func checkDiffInComposition(current, proposed interface{}) (samePath [][2]PathId
 	}
 
 	return samePath, newPath, deletedPath, nil
+}
+
+func diffReport(d *diff, report []string) []string {
+	for k, v := range d.Param {
+		line := fmt.Sprintf("%s.%s:%v->%v", d.Path, k, v.Current, v.Proposed)
+		report = append(report, line)
+	}
+
+	for k, v := range d.Composition {
+		if v.New != nil {
+			for _, vv := range v.New {
+				p := vv.(PathIdentifier)
+				line := fmt.Sprintf("%s.%s:New=%s", d.Path, k, p.Path())
+				report = append(report, line)
+			}
+		}
+		if v.Deleted != nil {
+			for _, vv := range v.Deleted {
+				p := vv.(PathIdentifier)
+				line := fmt.Sprintf("%s.%s:Deleted=%s", d.Path, k, p.Path())
+				report = append(report, line)
+			}
+		}
+		if v.Modified != nil {
+			for _, dd := range v.Modified {
+				report = diffReport(&dd, report)
+			}
+		}
+	}
+	return report
+}
+
+func GetDiffReport(current, proposed PathIdentifier) ([]string, error) {
+	d, err := GetDiff(current, proposed)
+	if err != nil {
+		return nil, err
+	}
+	report := []string{}
+	return diffReport(d, report), nil
 }

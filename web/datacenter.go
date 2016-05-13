@@ -72,18 +72,44 @@ func dcPage(w http.ResponseWriter, r *http.Request, user string) {
 		version = strconv.Itoa(versions[len(versions)-1])
 	}
 
+	//diff part
+	diffCurrent := r.Form.Get("current_verdion")
+	diffProposed := r.Form.Get("proposed_verdion")
+	diffReport := []string{}
+	if diffCurrent != "" && diffProposed != "" {
+		if r, err := computeDiff(user, datacenterName, diffCurrent, diffProposed); err == nil && r != nil {
+			diffReport = r
+		}
+	}
+
 	data := struct {
 		User           string
 		DatacenterName string
 		Versions       []int
 		Version        string
+		DiffReport     []string
 	}{
 		User:           user,
 		DatacenterName: datacenterName,
 		Versions:       versions,
 		Version:        version,
+		DiffReport:     diffReport,
 	}
 	renderTemplate(w, "topoDC", data)
+}
+
+func computeDiff(user, datacenterName, currentVersion, proposedVersion string) ([]string, error) {
+	// retrieve the 2 datacenters
+	dcCurrent, err := getDatacenter(user, datacenterName, currentVersion)
+	if err != nil {
+		return nil, fmt.Errorf("Can't read datatacenter %s version %s. Error: %v", datacenterName, currentVersion, err)
+	}
+	dcProposed, err := getDatacenter(user, datacenterName, proposedVersion)
+	if err != nil {
+		return nil, fmt.Errorf("Can't read datatacenter %s version %s. Error: %v", datacenterName, proposedVersion, err)
+	}
+
+	return api.GetDiffReport(*dcCurrent, *dcProposed)
 }
 
 func dcUploadTopo(w http.ResponseWriter, r *http.Request, user string) {
@@ -267,6 +293,11 @@ func xdcrDatacenterLinks(user, directory string) []linkdc {
 		fmt.Printf("Error:%#v", err)
 		return links
 	}
+
+	if len(b) < 3 {
+		return links
+	}
+
 	for _, dctxt := range strings.Split(string(b), ",") {
 		token := strings.Split(dctxt, ":")
 		uri := filepath.Join("/datacenter", token[0]+"?v="+token[1])

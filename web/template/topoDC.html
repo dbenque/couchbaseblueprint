@@ -31,6 +31,12 @@
 <button type="submit" class="btn btn-primary">View Diff</button>
 </div>
 </form>
+{{ if len .DiffReport }}
+{{ range .DiffReport}}
+{{.}}<br>
+{{ end }}
+{{ end }}
+
 {{ end }}
 
 <h1>Upload new topology</h1>

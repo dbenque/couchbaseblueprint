@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -23,37 +22,6 @@ type myStruct struct {
 
 func (p myStruct) Path() string {
 	return string(p.P)
-}
-
-func diffReport(d *diff, report []string) []string {
-	for k, v := range d.Param {
-		line := fmt.Sprintf("%s.%s:%v->%v", d.Path, k, v.Current, v.Proposed)
-		report = append(report, line)
-	}
-
-	for k, v := range d.Composition {
-		if v.New != nil {
-			for _, vv := range v.New {
-				p := vv.(PathIdentifier)
-				line := fmt.Sprintf("%s.%s:New=%s", d.Path, k, p.Path())
-				report = append(report, line)
-			}
-		}
-		if v.Deleted != nil {
-			for _, vv := range v.Deleted {
-				p := vv.(PathIdentifier)
-				line := fmt.Sprintf("%s.%s:Deleted=%s", d.Path, k, p.Path())
-				report = append(report, line)
-			}
-		}
-		if v.Modified != nil {
-			for _, dd := range v.Modified {
-				report = diffReport(&dd, report)
-			}
-		}
-	}
-
-	return report
 }
 
 func TestCheckDiff(t *testing.T) {
@@ -142,13 +110,12 @@ func TestCheckDiff(t *testing.T) {
 				},
 				},
 			}},
-			report: []string{"B1.F1:1->5 B1.F3:Deleted=C1 B1.F3:New=C3 C2.F1:10->100"},
+			report: []string{"B1.F1:1->5", "B1.F3:Deleted=C1", "B1.F3:New=C3", "C2.F1:10->100"},
 		},
 	}
 
 	for _, test := range testcase {
-		fmt.Printf("Test %s\n", test.name)
-		d, err := checkDiff(test.current, test.proposed)
+		d, err := GetDiff(test.current, test.proposed)
 		if err != nil {
 			t.Errorf("Test %s failed with error %v", test.name, err)
 			continue

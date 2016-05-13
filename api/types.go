@@ -196,6 +196,11 @@ type PathIdentifier interface {
 }
 
 //Path return the Path to that Cluster (identifier)
+func (dc Datacenter) Path() string {
+	return dc.Name
+}
+
+//Path return the Path to that Cluster (identifier)
 func (c Cluster) Path() string {
 	return c.Labels["Datacenter"] + "_" + c.Labels["ClusterGroup"] + "_" + c.Name + "_" + c.Instance
 }

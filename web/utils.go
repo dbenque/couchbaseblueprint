@@ -1,6 +1,8 @@
 package web
 
 import (
+	"couchbasebp/api"
+	"couchbasebp/utils"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -166,4 +168,12 @@ func log(r *http.Request, f string, a ...interface{}) {
 	} else {
 		fmt.Printf("%s %s: %s\n", t.Format(time.RFC3339), u, f)
 	}
+}
+
+func getDatacenter(user, datacenterName, version string) (*api.Datacenter, error) {
+	_, err := strconv.Atoi(version)
+	if err != nil {
+		return nil, fmt.Errorf("Version string must represent an int: %v", err)
+	}
+	return utils.DatacenterFromFile(filepath.Join(datacenterDirectory(user, datacenterName), "v"+version, "topo.yaml"))
 }
